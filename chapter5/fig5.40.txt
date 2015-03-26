@@ -1,0 +1,43 @@
+#include <stdio.h>
+
+#define TRUE 1
+#define FALSE 0
+
+typedef int BOOLEAN;
+typedef int ETYPE;
+
+typedef struct NODE *TREE;
+struct NODE {
+	ETYPE element;
+	TREE leftChild, rightChild;
+};
+
+ETYPE deletemin(TREE *pT)
+{
+	ETYPE min;
+
+	if ((*pT)->leftChild == NULL) {
+		min = (*pT)->element;
+		(*pT) = (*pT)->rightChild;
+		return min;
+	}
+	else
+		return deletemin(&((*pT)->leftChild));
+}
+
+void delete(ETYPE x, TREE *pT)
+{
+	if ((*pT) != NULL)
+		if (x < (*pT)->element)
+			delete(x, &((*pT)->leftChild));
+		else if (x > (*pT)->element)
+			delete(x, &((*pT)->rightChild));
+		else /* here, x is at the root of (*pT) */
+			if ((*pT)->leftChild == NULL)
+				(*pT) = (*pT)->rightChild;
+			else if ((*pT)->rightChild == NULL)
+				(*pT) = (*pT)->leftChild;
+			else /* here, neither child is NULL */
+				(*pT)->element =
+						deletemin(&((*pT)->rightChild));
+}
