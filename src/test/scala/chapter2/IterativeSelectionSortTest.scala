@@ -19,15 +19,15 @@ class IterativeSelectionSortTest extends TestSpec {
   }
   
   it should "sort a sorted array" in {
-    val A = Array.iterate(1, 100)(n => n + 1)
+    val A = Array.range(0, 100)
     val E = A.clone
     selectionSort(A)
     A should equal (E)
   }
 
   it should "sort a reversed array" in {
-    val A = Array.iterate(100, 100)(n => n - 1)
-    val E = Array.iterate(1, 100)(n => n + 1)
+    val A = Array.range(100, 0, -1)
+    val E = Array.range(1, 101)
     selectionSort(A)
     A should equal (E)
   }

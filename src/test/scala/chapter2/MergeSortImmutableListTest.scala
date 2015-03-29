@@ -15,13 +15,13 @@ class MergeSortImmutableListTest extends TestSpec {
   }
   
   it should "sort a sorted list" in {
-    val list = List.iterate(1, 100)(n => n + 1)
+    val list = List.range(0, 100)
     mergeSort(list) should equal (list)
   }
   
   it should "sort a reversed list" in {
-    val list = List.iterate(100, 100)(n => n - 1)
-    val expected = List.iterate(1, 100)(n => n + 1)
+    val list = List.range(100, 0, -1)
+    val expected = List.range(1, 101)
     mergeSort(list) should equal (expected)
   }
   
