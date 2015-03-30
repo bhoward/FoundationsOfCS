@@ -32,31 +32,21 @@ object MergeSortImmutableList {
     } else if (list.tail == Nil) {
       list
     } else {
-      val (first, second) = split(list)
-      merge(mergeSort(first), mergeSort(second))
+      val (first, second) = list.splitAt(list.size / 2)
+      merge(mergeSort(first), mergeSort(second), Nil)
     }
   }
 
-  def merge(list1: List[Int], list2: List[Int]): List[Int] = {
+  // tail-recursive to avoid stack overflow on large lists
+  def merge(list1: List[Int], list2: List[Int], result: List[Int]): List[Int] = {
     if (list1 == Nil) {
-      list2
+      result.reverse ::: list2
     } else if (list2 == Nil) {
-      list1
+      result.reverse ::: list1
     } else if (list1.head <= list2.head) {
-      list1.head :: merge(list1.tail, list2)
+      merge(list1.tail, list2, list1.head :: result)
     } else {
-      list2.head :: merge(list1, list2.tail)
-    }
-  }
-
-  def split(list: List[Int]): (List[Int], List[Int]) = {
-    if (list == Nil) {
-      (Nil, Nil)
-    } else if (list.tail == Nil) {
-      (list, Nil)
-    } else {
-      val (first, second) = split(list.tail.tail)
-      (list.head :: first, list.tail.head :: second)
+      merge(list1, list2.tail, list2.head :: result)
     }
   }
 }
