@@ -67,9 +67,21 @@ object BinarySearchTree {
     case head :: tail => insertAll(insert(t, head), tail)
   }
 
-  def inorder(t: BST): List[Int] = t match {
+  def inorder0(t: BST): List[Int] = t match {
     case Empty         => Nil
     case Node(l, v, r) => inorder(l) ::: v :: inorder(r)
+  }
+  
+  // tail-recursive version to handle severely unbalanced trees
+  def inorder(t: BST): List[Int] = {
+    def aux(ts: List[BST], result: List[Int]): List[Int] = ts match {
+      case Nil => result
+      case Empty :: tail => aux(tail, result)
+      case Node(l, v, Empty) :: tail => aux(l :: tail, v :: result)
+      case Node(l, v, r) :: tail => aux(r :: Node(Empty, v, Empty) :: l :: tail, result)
+    }
+    
+    aux(List(t), Nil)
   }
 
   def treeSort(xs: List[Int]): List[Int] = inorder(insertAll(Empty, xs))

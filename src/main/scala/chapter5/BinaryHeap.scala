@@ -74,11 +74,12 @@ object BinaryHeap {
     }
   }
 
-  def removeAll(h: Heap): List[Int] = h.findMin match {
-    case None => Nil
+  // tail-recursive version
+  def removeAll(h: Heap, result: List[Int] = Nil): List[Int] = h.findMin match {
+    case None => result.reverse
     case Some(m) => {
       h.deleteMin()
-      m :: removeAll(h)
+      removeAll(h, m :: result)
     }
   }
 

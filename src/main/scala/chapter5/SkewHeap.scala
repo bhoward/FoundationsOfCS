@@ -38,10 +38,11 @@ object SkewHeap {
     case Node(l, _, r) => merge(l, r)
   }
 
-  def removeAll(h: Heap): List[Int] = findMin(h) match {
-    case None => Nil
+  // tail-recursive version
+  def removeAll(h: Heap, result: List[Int] = Nil): List[Int] = findMin(h) match {
+    case None => result.reverse
     case Some(m) => {
-      m :: removeAll(deleteMin(h))
+      removeAll(deleteMin(h), m :: result)
     }
   }
 

@@ -5,7 +5,7 @@ import scala.util.Random
 
 object SortBenchmark extends PerformanceTest.OfflineReport {
   val rand = new Random(0)
-  val sizes = Gen.range("size")(1000, 10000, 1000)
+  val sizes = Gen.range("size")(500, 5000, 500)
 
   val sortedArrays = for (size <- sizes) yield Array.range(1, size)
   val reverseArrays = for (size <- sizes) yield Array.range(size, 1, -1)
@@ -16,7 +16,7 @@ object SortBenchmark extends PerformanceTest.OfflineReport {
   val randomLists = randomArrays map (_.toList)
 
   performance of "Sorting" config (verbose -> false) in {
-    performance of "Sorted Arrays" in {
+    performance of "Sorted" in {
       measure method "Selection Sort" in {
         using(sortedArrays) in {
           A => IterativeSelectionSort.selectionSort(A)
@@ -34,7 +34,7 @@ object SortBenchmark extends PerformanceTest.OfflineReport {
       }
     }
 
-    performance of "Reverse Arrays" in {
+    performance of "Reverse" in {
       measure method "Selection Sort" in {
         using(reverseArrays) in {
           A => IterativeSelectionSort.selectionSort(A)
@@ -52,7 +52,7 @@ object SortBenchmark extends PerformanceTest.OfflineReport {
       }
     }
 
-    performance of "Random Arrays" in {
+    performance of "Random" in {
       measure method "Selection Sort" in {
         using(randomArrays) in {
           A => IterativeSelectionSort.selectionSort(A)
