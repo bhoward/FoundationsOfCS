@@ -26,11 +26,11 @@ object BinarySearchTree {
   def insert(t: BST, x: Int): BST = t match {
     case Empty => Node(Empty, x, Empty)
     case Node(l, v, r) =>
-      if (x == v) {
-        t
-      } else if (x < v) {
+      if (x < v) {
         Node(insert(l, x), v, r)
       } else {
+        // Note that this will insert a duplicate if x == v
+        // Need duplicates for treeSort application
         Node(l, v, insert(r, x))
       }
   }

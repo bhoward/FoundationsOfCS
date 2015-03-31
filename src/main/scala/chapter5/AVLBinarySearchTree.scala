@@ -56,9 +56,7 @@ object AVLBinarySearchTree {
   def insert(t: BST, x: Int): BST = t match {
     case Empty => Node(Empty, x, Empty)
     case Node(l, v, r) =>
-      if (x == v) {
-        t
-      } else if (x < v) {
+      if (x < v) {
         balance(insert(l, x), v, r)
       } else {
         balance(l, v, insert(r, x))

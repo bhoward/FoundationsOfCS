@@ -35,7 +35,7 @@ class BinarySearchTreeTest extends TestSpec {
       } else {
         inorder(deleteMin(t)) should equal(inorder(delete(t, m1.get)))
         if (m2.nonEmpty) {
-          m1.get should be < (m2.get)
+          m1.get should be <= (m2.get)
         }
       }
     }
@@ -50,8 +50,7 @@ class BinarySearchTreeTest extends TestSpec {
 
   "BST treeSort" should "sort a list of numbers" in {
     forAll { xs: List[Int] =>
-      // compare sets, because treeSort removes duplicates...
-      treeSort(xs).toSet should equal(xs.toSet)
+      treeSort(xs) should equal(xs.sorted)
     }
   }
 }
