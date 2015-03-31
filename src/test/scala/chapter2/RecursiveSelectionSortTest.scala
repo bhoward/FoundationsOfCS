@@ -39,4 +39,11 @@ class RecursiveSelectionSortTest extends TestSpec {
       A should equal (E)
     }
   }
+  
+  it should "sort a large sorted array without overflow" in {
+    val A = Array.range(1, 100000)
+    val E = A.clone
+    selectionSort(A)
+    A should equal(E)
+  }
 }

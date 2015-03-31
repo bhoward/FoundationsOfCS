@@ -53,4 +53,9 @@ class BinarySearchTreeTest extends TestSpec {
       treeSort(xs) should equal(xs.sorted)
     }
   }
+  
+  it should "sort a large sorted list without overflow" in {
+    val xs = List.range(1, 100000)
+    treeSort(xs) should equal(xs)
+  }
 }
