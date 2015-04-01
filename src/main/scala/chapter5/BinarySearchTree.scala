@@ -34,11 +34,11 @@ object BinarySearchTree {
         Node(l, v, insert0(r, x))
       }
   }
-  
+
   // trampolined CPS version to avoid stack overflow
   def insert1(t: BST, x: Int): BST = {
     import scala.util.control.TailCalls._
-    
+
     def aux(t: BST, k: BST => TailRec[BST]): TailRec[BST] = t match {
       case Empty => tailcall(k(Node(Empty, x, Empty)))
       case Node(l, v, r) =>
@@ -48,7 +48,7 @@ object BinarySearchTree {
           aux(r, a => tailcall(k(Node(l, v, a))))
         }
     }
-    
+
     aux(t, a => done(a)).result
   }
 
@@ -89,61 +89,61 @@ object BinarySearchTree {
     case Empty         => Nil
     case Node(l, v, r) => inorder0(l) ::: v :: inorder0(r)
   }
-  
+
   // tail-recursive version to handle severely unbalanced trees
   def inorder1(t: BST): List[Int] = {
     def aux(ts: List[BST], result: List[Int]): List[Int] = ts match {
-      case Nil => result
-      case Empty :: tail => aux(tail, result)
+      case Nil                       => result
+      case Empty :: tail             => aux(tail, result)
       case Node(l, v, Empty) :: tail => aux(l :: tail, v :: result)
-      case Node(l, v, r) :: tail => aux(r :: Node(Empty, v, Empty) :: l :: tail, result)
+      case Node(l, v, r) :: tail     => aux(r :: Node(Empty, v, Empty) :: l :: tail, result)
     }
-    
+
     aux(List(t), Nil)
   }
-  
-// The following versions were attempts at running faster without overflow on unbalanced trees,
-// preserved here to record what I tried -- they might still work with some tweaking
-//
-//  // CPS version
-//  def inorder2(t: BST): List[Int] = {
-//    def aux(t: BST, k: List[Int] => List[Int]): List[Int] = t match {
-//      case Empty => k(Nil)
-//      case Node(l, v, r) => aux(l, a => aux(r, b => k(a ::: v :: b)))
-//    }
-//    
-//    aux(t, x => x)
-//  }
-//  
-//  // Accumulator version
-//  def inorder3(t: BST): List[Int] = {
-//    def aux(t: BST, acc: List[Int]): List[Int] = t match {
-//      case Empty => acc
-//      case Node(l, v, r) => aux(l, v :: aux(r, acc))
-//    }
-//    
-//    aux(t, Nil)
-//  }
-//  
-//  // CPS-Accumulator version
-//  def inorder4(t: BST): List[Int] = {
-//    def aux(t: BST, acc: List[Int], k: List[Int] => List[Int]): List[Int] = t match {
-//      case Empty => k(acc)
-//      case Node(l, v, r) => aux(r, acc, a => aux(l, v :: a, k))
-//    }
-//    
-//    aux(t, Nil, x => x)
-//  }
+
+  // The following versions were attempts at running faster without overflow on unbalanced trees,
+  // preserved here to record what I tried -- they might still work with some tweaking
+  //
+  //  // CPS version
+  //  def inorder2(t: BST): List[Int] = {
+  //    def aux(t: BST, k: List[Int] => List[Int]): List[Int] = t match {
+  //      case Empty => k(Nil)
+  //      case Node(l, v, r) => aux(l, a => aux(r, b => k(a ::: v :: b)))
+  //    }
+  //
+  //    aux(t, x => x)
+  //  }
+  //
+  //  // Accumulator version
+  //  def inorder3(t: BST): List[Int] = {
+  //    def aux(t: BST, acc: List[Int]): List[Int] = t match {
+  //      case Empty => acc
+  //      case Node(l, v, r) => aux(l, v :: aux(r, acc))
+  //    }
+  //
+  //    aux(t, Nil)
+  //  }
+  //
+  //  // CPS-Accumulator version
+  //  def inorder4(t: BST): List[Int] = {
+  //    def aux(t: BST, acc: List[Int], k: List[Int] => List[Int]): List[Int] = t match {
+  //      case Empty => k(acc)
+  //      case Node(l, v, r) => aux(r, acc, a => aux(l, v :: a, k))
+  //    }
+  //
+  //    aux(t, Nil, x => x)
+  //  }
 
   // choose the desired versions of insert and inorder
   def insert(t: BST, x: Int): BST = insert1(t, x)
   def inorder(t: BST): List[Int] = inorder1(t)
-  
+
   def treeSort(xs: List[Int]): List[Int] = inorder(insertAll(Empty, xs))
-  
+
   def treeSortNaive(xs: List[Int]): List[Int] = inorder0(insertAll(Empty, xs))
   def treeSortTail(xs: List[Int]): List[Int] = inorder1(insertAll(Empty, xs))
-//  def treeSortCPS(xs: List[Int]): List[Int] = inorder2(insertAll(Empty, xs))
-//  def treeSortAcc(xs: List[Int]): List[Int] = inorder3(insertAll(Empty, xs))
-//  def treeSortCPSAcc(xs: List[Int]): List[Int] = inorder4(insertAll(Empty, xs))
+  //  def treeSortCPS(xs: List[Int]): List[Int] = inorder2(insertAll(Empty, xs))
+  //  def treeSortAcc(xs: List[Int]): List[Int] = inorder3(insertAll(Empty, xs))
+  //  def treeSortCPSAcc(xs: List[Int]): List[Int] = inorder4(insertAll(Empty, xs))
 }

@@ -6,7 +6,7 @@ object SkewHeap {
   sealed trait Heap
   case object Empty extends Heap
   case class Node(left: Heap, value: Int, right: Heap) extends Heap
-  
+
   private def merge(h1: Heap, h2: Heap): Heap = (h1, h2) match {
     case (Empty, _) => h2
     case (_, Empty) => h1
@@ -21,20 +21,19 @@ object SkewHeap {
   def insert(h: Heap, x: Int): Heap = {
     merge(h, Node(Empty, x, Empty))
   }
-  
-  
+
   def insertAll(h: Heap, xs: List[Int]): Heap = xs match {
-    case Nil => h
+    case Nil          => h
     case head :: tail => insertAll(insert(h, head), tail)
   }
 
   def findMin(h: Heap): Option[Int] = h match {
-    case Empty => None
+    case Empty         => None
     case Node(_, m, _) => Option(m)
   }
 
   def deleteMin(h: Heap): Heap = h match {
-    case Empty => Empty
+    case Empty         => Empty
     case Node(l, _, r) => merge(l, r)
   }
 

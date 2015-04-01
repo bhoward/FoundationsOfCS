@@ -5,7 +5,7 @@ import util.TestSpec
 class MergeSortMutableListTest extends TestSpec {
   import MergeSortMutableList.{mergeSort, LIST, NULL}
   
-  "Merge Sort on immutable lists" should "sort an empty list" in {
+  "Merge Sort on mutable lists" should "sort an empty list" in {
     mergeSort(NULL) should equal (NULL)
   }
   
