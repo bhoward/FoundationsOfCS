@@ -6,30 +6,30 @@ import org.scalacheck.Arbitrary.arbitrary
 
 class AVLBinarySearchTreeTest extends TestSpec {
   import AVLBinarySearchTree._
-  
+
   implicit def arbBST: Arbitrary[BST] = Arbitrary {
     for (xs <- arbitrary[List[Int]]) yield insertAll(Empty, xs)
   }
-  
+
   "AVL insert" should "contain inserted elements" in {
     forAll { (t: BST, x: Int) =>
-      contains(insert(t, x), x) should be (true)
+      contains(insert(t, x), x) should be(true)
     }
   }
 
   "AVL insertAll" should "contain inserted elements" in {
     forAll { (n: Int, xs: List[Int]) =>
       val t = insertAll(Empty, xs)
-      xs.forall(x => contains(t, x)) should be (true)
-      contains(t, n) should be (xs.contains(n))
+      xs.forall(x => contains(t, x)) should be(true)
+      contains(t, n) should be(xs.contains(n))
     }
   }
-  
+
   "AVL deleteMin" should "remove the smallest element" in {
     forAll { t: BST =>
       val m1 = findMin(t)
       val m2 = findMin(deleteMin(t))
-      
+
       if (m1.isEmpty) {
         m2 shouldBe empty
       } else {
@@ -53,7 +53,7 @@ class AVLBinarySearchTreeTest extends TestSpec {
       treeSort(xs) should equal(xs.sorted)
     }
   }
-  
+
   it should "sort a large sorted list without overflow" in {
     val xs = List.range(1, 100000)
     treeSort(xs) should equal(xs)

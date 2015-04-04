@@ -23,6 +23,34 @@ object BinarySearchTree {
       }
   }
 
+  def findMin(t: BST): Option[Int] = t match {
+    case Empty             => None
+    case Node(Empty, v, _) => Some(v)
+    case Node(l, _, _)     => findMin(l)
+  }
+
+  def deleteMin(t: BST): BST = t match {
+    case Empty             => Empty
+    case Node(Empty, _, r) => r
+    case Node(l, v, r)     => Node(deleteMin(l), v, r)
+  }
+
+  def delete(t: BST, x: Int): BST = t match {
+    case Empty => Empty
+    case Node(l, v, r) =>
+      if (x == v) {
+        findMin(r) match {
+          case None    => l
+          case Some(m) => Node(l, m, deleteMin(r))
+        }
+      } else if (x < v) {
+        Node(delete(l, x), v, r)
+      } else {
+        Node(l, v, delete(r, x))
+      }
+  }
+
+  // naive version -- overflows stack with large unbalanced tree
   def insert0(t: BST, x: Int): BST = t match {
     case Empty => Node(Empty, x, Empty)
     case Node(l, v, r) =>
@@ -52,38 +80,6 @@ object BinarySearchTree {
     aux(t, a => done(a)).result
   }
 
-  def findMin(t: BST): Option[Int] = t match {
-    case Empty             => None
-    case Node(Empty, v, _) => Some(v)
-    case Node(l, _, _)     => findMin(l)
-  }
-
-  def deleteMin(t: BST): BST = t match {
-    case Empty             => Empty
-    case Node(Empty, _, r) => r
-    case Node(l, v, r)     => Node(deleteMin(l), v, r)
-  }
-
-  def delete(t: BST, x: Int): BST = t match {
-    case Empty => Empty
-    case Node(l, v, r) =>
-      if (x == v) {
-        findMin(r) match {
-          case None    => l
-          case Some(m) => Node(l, m, deleteMin(r))
-        }
-      } else if (x < v) {
-        Node(delete(l, x), v, r)
-      } else {
-        Node(l, v, delete(r, x))
-      }
-  }
-
-  def insertAll(t: BST, xs: List[Int]): BST = xs match {
-    case Nil          => t
-    case head :: tail => insertAll(insert(t, head), tail)
-  }
-
   // naive version -- overflows stack with large unbalanced tree
   def inorder0(t: BST): List[Int] = t match {
     case Empty         => Nil
@@ -101,6 +97,20 @@ object BinarySearchTree {
 
     aux(List(t), Nil)
   }
+
+  // choose the desired versions of insert and inorder
+  def insert(t: BST, x: Int): BST = insert1(t, x)
+  def inorder(t: BST): List[Int] = inorder1(t)
+
+  def insertAll(t: BST, xs: List[Int]): BST = xs match {
+    case Nil          => t
+    case head :: tail => insertAll(insert(t, head), tail)
+  }
+
+  def treeSort(xs: List[Int]): List[Int] = inorder(insertAll(Empty, xs))
+
+  def treeSortNaive(xs: List[Int]): List[Int] = inorder0(insertAll(Empty, xs))
+  def treeSortTail(xs: List[Int]): List[Int] = inorder1(insertAll(Empty, xs))
 
   // The following versions were attempts at running faster without overflow on unbalanced trees,
   // preserved here to record what I tried -- they might still work with some tweaking
@@ -134,15 +144,7 @@ object BinarySearchTree {
   //
   //    aux(t, Nil, x => x)
   //  }
-
-  // choose the desired versions of insert and inorder
-  def insert(t: BST, x: Int): BST = insert1(t, x)
-  def inorder(t: BST): List[Int] = inorder1(t)
-
-  def treeSort(xs: List[Int]): List[Int] = inorder(insertAll(Empty, xs))
-
-  def treeSortNaive(xs: List[Int]): List[Int] = inorder0(insertAll(Empty, xs))
-  def treeSortTail(xs: List[Int]): List[Int] = inorder1(insertAll(Empty, xs))
+  //
   //  def treeSortCPS(xs: List[Int]): List[Int] = inorder2(insertAll(Empty, xs))
   //  def treeSortAcc(xs: List[Int]): List[Int] = inorder3(insertAll(Empty, xs))
   //  def treeSortCPSAcc(xs: List[Int]): List[Int] = inorder4(insertAll(Empty, xs))

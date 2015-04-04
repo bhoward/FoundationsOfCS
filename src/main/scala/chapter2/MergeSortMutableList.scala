@@ -67,4 +67,20 @@ object MergeSortMutableList {
       secondCell
     }
   }
+  
+  // Convenience methods for testing -- construct from built-in List[Int]
+  def makeList(L: List[Int]): LIST = L match {
+    case Nil => NULL
+    case head :: tail => new LIST(head, makeList(tail))
+  }
+  
+  def equalLists(list1: LIST, list2: LIST): Boolean = {
+    if (list1 == NULL) {
+      list2 == NULL
+    } else if (list2 == NULL) {
+      false
+    } else {
+      list1.element == list2.element && equalLists(list1.next, list2.next)
+    }
+  }
 }

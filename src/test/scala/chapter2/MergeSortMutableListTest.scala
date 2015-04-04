@@ -3,47 +3,51 @@ package chapter2
 import util.TestSpec
 
 class MergeSortMutableListTest extends TestSpec {
-  import MergeSortMutableList.{mergeSort, LIST, NULL}
-  
+  import MergeSortMutableList._
+
   "Merge Sort on mutable lists" should "sort an empty list" in {
-    mergeSort(NULL) should equal (NULL)
+    mergeSort(NULL) should equal(NULL)
   }
-  
+
   it should "sort a short and simple sample list" in {
-    val list = new LIST(3, new LIST(1, new LIST(4, new LIST(1, new LIST(5, NULL)))))
+    val list = makeList(List(3, 1, 4, 1, 5))
+    val expected = makeList(List(1, 1, 3, 4, 5))
     val result = mergeSort(list)
-    result.element should equal (1)
-    result.next.element should equal (1)
-    result.next.next.element should equal (3)
-    result.next.next.next.element should equal (4)
-    result.next.next.next.next.element should equal (5)
-    result.next.next.next.next.next should equal (NULL)
+    equalLists(expected, result) should be(true)
     // note that the contents of list at this point are messed up; try
-    // MergeSortMutableList.printList(list)
+    // printList(list)
+  }
+
+  it should "sort a sample list" in {
+    val original = List(3, 14, 15, 92, 65, 35, 89, 79, 32, 38, 46, 26, 43, 38, 32, 79, 50, 28, 84, 19, 71, 69, 39, 93, 75, 10)
+    val list = makeList(original)
+    val expected = makeList(original.sorted)
+    val result = mergeSort(list)
+    equalLists(expected, result) should be(true)
   }
   
-  /* The rest of these depend on easy ways to construct and copy LISTS, and test them for equality;
-   * that's why you should use the built-in types, kids
-   */
-//  it should "sort a sample list" in {
-//    val list = List(3, 14, 15, 92, 65, 35, 89, 79, 32, 38, 46, 26, 43, 38, 32, 79, 50, 28, 84, 19, 71, 69, 39, 93, 75, 10)
-//    mergeSort(list) should equal (list.sorted)
-//  }
-//  
-//  it should "sort a sorted list" in {
-//    val list = List.range(0, 100)
-//    mergeSort(list) should equal (list)
-//  }
-//  
-//  it should "sort a reversed list" in {
-//    val list = List.range(100, 0, -1)
-//    val expected = List.range(1, 101)
-//    mergeSort(list) should equal (expected)
-//  }
-//  
-//  it should "sort random lists" in {
-//    forAll { list: List[Int] =>
-//      mergeSort(list) should equal (list.sorted)
-//    }
-//  }
+  it should "sort a sorted list" in {
+    val original = List.range(0, 100)
+    val list = makeList(original)
+    val expected = makeList(original)
+    val result = mergeSort(list)
+    equalLists(expected, result) should be(true)
+  }
+
+  it should "sort a reversed list" in {
+    val original = List.range(100, 0, -1)
+    val list = makeList(original)
+    val expected = makeList(List.range(1, 101))
+    val result = mergeSort(list)
+    equalLists(expected, result) should be(true)
+  }
+
+  it should "sort random lists" in {
+    forAll { original: List[Int] =>
+      val list = makeList(original)
+      val expected = makeList(original.sorted)
+      val result = mergeSort(list)
+      equalLists(expected, result) should be(true)
+    }
+  }
 }
