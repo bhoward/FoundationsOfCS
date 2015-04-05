@@ -6,7 +6,7 @@ class QueuesTest extends TestSpec {
   import Queues._
 
   def runTests(queue: Queue, name: String): Unit = {
-    s"$name Stack insertion" should "return elements in original order" in {
+    s"$name Queue insertion" should "return elements in original order" in {
       forAll { xs: List[Int] =>
         queue.clear()
         for (x <- xs) queue.enqueue(x)

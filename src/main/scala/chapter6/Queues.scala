@@ -144,8 +144,13 @@ object Queues {
     }
 
     def enqueue(x: Int): Boolean = {
-      back.next = new LIST(x, NULL)
-      back = back.next
+      if (isEmpty) {
+        L = new LIST(x, NULL)
+        back = L
+      } else {
+        back.next = new LIST(x, NULL)
+        back = back.next
+      }
       true
     }
   }
