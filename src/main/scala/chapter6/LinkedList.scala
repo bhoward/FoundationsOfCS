@@ -15,7 +15,7 @@ object LinkedList {
       lookup(x, L.next)
     }
   }
-  
+
   // Returns the modified LIST, since Java/Scala don't have
   // reference parameters or explicit pointers
   def delete(x: Int, L: LIST): LIST = {
@@ -28,7 +28,7 @@ object LinkedList {
       L
     }
   }
-  
+
   // Returns the modified LIST, as above
   def insert(x: Int, L: LIST): LIST = {
     if (L == NULL) {

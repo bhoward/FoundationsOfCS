@@ -6,14 +6,14 @@ import org.scalacheck.Arbitrary.arbitrary
 
 class SkewHeapTest extends TestSpec {
   import SkewHeap._
-  
+
   implicit def arbHeap: Arbitrary[Heap] = Arbitrary {
     for (xs <- arbitrary[List[Int]]) yield { insertAll(Empty, xs) }
   }
-  
+
   "Skew Heap insert" should "contain inserted elements" in {
     forAll { (h: Heap, x: Int) =>
-      removeAll(insert(h, x)).contains(x) should be (true)
+      removeAll(insert(h, x)).contains(x) should be(true)
     }
   }
 
@@ -21,8 +21,8 @@ class SkewHeapTest extends TestSpec {
     forAll { xs: List[Int] =>
       val a = removeAll(insertAll(Empty, xs))
       a.size should equal(xs.size)
-      xs.forall(x => a.contains(x)) should be (true)
-      a.forall(x => xs.contains(x)) should be (true)
+      xs.forall(x => a.contains(x)) should be(true)
+      a.forall(x => xs.contains(x)) should be(true)
     }
   }
 
@@ -30,7 +30,7 @@ class SkewHeapTest extends TestSpec {
     forAll { h: Heap =>
       val m1 = findMin(h)
       val m2 = findMin(deleteMin(h))
-      
+
       if (m1.isEmpty) {
         m2 shouldBe empty
       } else {
@@ -49,28 +49,28 @@ class SkewHeapTest extends TestSpec {
   }
 
   "Skew Heap Sort" should "sort an empty list" in {
-    heapSort(Nil) should equal (Nil)
+    heapSort(Nil) should equal(Nil)
   }
-  
+
   it should "sort a sample list" in {
     val list = List(3, 14, 15, 92, 65, 35, 89, 79, 32, 38, 46, 26, 43, 38, 32, 79, 50, 28, 84, 19, 71, 69, 39, 93, 75, 10)
-    heapSort(list) should equal (list.sorted)
+    heapSort(list) should equal(list.sorted)
   }
-  
+
   it should "sort a sorted list" in {
     val list = List.range(0, 100)
-    heapSort(list) should equal (list)
+    heapSort(list) should equal(list)
   }
-  
+
   it should "sort a reversed list" in {
     val list = List.range(100, 0, -1)
     val expected = List.range(1, 101)
-    heapSort(list) should equal (expected)
+    heapSort(list) should equal(expected)
   }
-  
+
   it should "sort random lists" in {
     forAll { list: List[Int] =>
-      heapSort(list) should equal (list.sorted)
+      heapSort(list) should equal(list.sorted)
     }
   }
 

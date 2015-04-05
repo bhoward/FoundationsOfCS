@@ -13,7 +13,7 @@ object SortedList {
         lookup(x, next)
       }
   }
-  
+
   def delete(x: Int, L: List[Int]): List[Int] = L match {
     case Nil => Nil
     case element :: next =>
@@ -25,7 +25,7 @@ object SortedList {
         element :: delete(x, next)
       }
   }
-  
+
   def insert(x: Int, L: List[Int]): List[Int] = L match {
     case Nil => x :: Nil
     case element :: next =>

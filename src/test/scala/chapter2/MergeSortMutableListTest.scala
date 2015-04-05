@@ -25,7 +25,7 @@ class MergeSortMutableListTest extends TestSpec {
     val result = mergeSort(list)
     equalLists(expected, result) should be(true)
   }
-  
+
   it should "sort a sorted list" in {
     val original = List.range(0, 100)
     val list = makeList(original)

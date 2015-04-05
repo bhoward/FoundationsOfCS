@@ -13,7 +13,7 @@ object DoublyLinkedList {
   }
 
   def isEmpty(L: LIST): Boolean = L.next == L
-  
+
   def clear(L: LIST): Unit = {
     L.next = L
     L.previous = L
@@ -26,7 +26,7 @@ object DoublyLinkedList {
     }
     return current != L
   }
-  
+
   def delete(x: Int, L: LIST): Unit = {
     var current = L.next
     while (current != L && current.element != x) {
@@ -37,7 +37,7 @@ object DoublyLinkedList {
       current.next.previous = current.previous
     }
   }
-  
+
   def front(L: LIST): Option[Int] = {
     if (isEmpty(L)) {
       None
@@ -45,7 +45,7 @@ object DoublyLinkedList {
       Option(L.next.element)
     }
   }
-  
+
   def back(L: LIST): Option[Int] = {
     if (isEmpty(L)) {
       None
@@ -53,17 +53,17 @@ object DoublyLinkedList {
       Option(L.previous.element)
     }
   }
-  
+
   def deleteFront(L: LIST): Unit = {
     L.next = L.next.next
     L.next.previous = L
   }
-  
+
   def deleteBack(L: LIST): Unit = {
     L.previous = L.previous.previous
     L.previous.next = L
   }
-  
+
   def insertFront(x: Int, L: LIST): Unit = {
     val node = new LIST(L, x, L.next)
     node.previous.next = node

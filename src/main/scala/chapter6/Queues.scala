@@ -14,7 +14,7 @@ object Queues {
   class ArrayQueue extends Queue {
     private val MAX = 100
     private val A = new Array[Int](MAX)
-    
+
     // Invariant: either front == back, or
     // first is A(front), last is A(if (back == 0) MAX else back - 1);
     // front and back are always in range 0 .. MAX-1
@@ -165,6 +165,6 @@ object Queues {
 
     def dequeue(): Boolean = !isEmpty && { deleteFront(L); true }
 
-    def enqueue(x: Int) = { insertBack(x, L); true }
+    def enqueue(x: Int): Boolean = { insertBack(x, L); true }
   }
 }

@@ -1,6 +1,6 @@
 package util
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 import org.scalatest.prop.PropertyChecks
 
 // Base class for test suites; see http://www.scalatest.org/user_guide/defining_base_classes

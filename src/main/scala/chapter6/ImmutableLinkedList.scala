@@ -7,7 +7,7 @@ object ImmutableLinkedList {
   sealed trait LIST
   case class CONS(element: Int, next: LIST) extends LIST
   case object NULL extends LIST
-  
+
   def lookup(x: Int, L: LIST): Boolean = L match {
     case NULL => false
     case CONS(element, next) =>
@@ -17,7 +17,7 @@ object ImmutableLinkedList {
         lookup(x, next)
       }
   }
-  
+
   def delete(x: Int, L: LIST): LIST = L match {
     case NULL => NULL
     case CONS(element, next) =>
@@ -27,7 +27,7 @@ object ImmutableLinkedList {
         CONS(element, delete(x, next))
       }
   }
-  
+
   def insert(x: Int, L: LIST): LIST = L match {
     case NULL => CONS(x, NULL)
     case CONS(element, next) =>

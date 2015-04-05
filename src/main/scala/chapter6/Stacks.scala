@@ -134,6 +134,6 @@ object Stacks {
 
     def pop(): Boolean = !isEmpty && { deleteFront(L); true }
 
-    def push(x: Int) = { insertFront(x, L); true }
+    def push(x: Int): Boolean = { insertFront(x, L); true }
   }
 }
