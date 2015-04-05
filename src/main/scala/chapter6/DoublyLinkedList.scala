@@ -13,6 +13,11 @@ object DoublyLinkedList {
   }
 
   def isEmpty(L: LIST): Boolean = L.next == L
+  
+  def clear(L: LIST): Unit = {
+    L.next = L
+    L.previous = L
+  }
 
   def lookup(x: Int, L: LIST): Boolean = {
     var current = L.next
