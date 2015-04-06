@@ -2,6 +2,8 @@ package chapter6
 
 // Based on Figure 6.6 of Aho & Ullman, using the built-in List type
 object SortedList {
+  type LIST = List[Int]
+
   def lookup(x: Int, L: List[Int]): Boolean = L match {
     case Nil => false
     case element :: next =>
