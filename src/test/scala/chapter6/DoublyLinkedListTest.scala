@@ -55,7 +55,7 @@ class DoublyLinkedListTest extends TestSpec {
       for (x <- xs) insertFront(x, L)
       for (x <- xs) {
         back(L) should be(Some(x))
-        deleteBack(L) should be()
+        deleteBack(L)
       }
       isEmpty(L) should be(true)
       back(L) should be(None)
@@ -69,7 +69,7 @@ class DoublyLinkedListTest extends TestSpec {
       for (x <- xs) insertBack(x, L)
       for (x <- xs) {
         front(L) should be(Some(x))
-        deleteFront(L) should be()
+        deleteFront(L)
       }
       isEmpty(L) should be(true)
       front(L) should be(None)
