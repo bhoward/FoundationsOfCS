@@ -29,7 +29,7 @@ object ArrayList {
     // Linear Search -- Figure 6.11
     def lookup(x: Int): Boolean = {
       for (i <- 0 until length) {
-        if (x == A(i)) return true
+        if (x == A(i)) return true // scalastyle:ignore
       }
       false
     }

@@ -24,7 +24,7 @@ object DoublyLinkedList {
     while (current != L && current.element != x) {
       current = current.next
     }
-    return current != L
+    current != L
   }
 
   def delete(x: Int, L: LIST): Unit = {

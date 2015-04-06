@@ -65,7 +65,7 @@ object BinarySearchTree {
 
   // trampolined CPS version to avoid stack overflow
   def insert1(t: BST, x: Int): BST = {
-    import scala.util.control.TailCalls._
+    import scala.util.control.TailCalls.{TailRec, tailcall, done}
 
     def aux(t: BST, k: BST => TailRec[BST]): TailRec[BST] = t match {
       case Empty => tailcall(k(Node(Empty, x, Empty)))

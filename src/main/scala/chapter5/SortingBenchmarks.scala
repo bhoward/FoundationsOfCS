@@ -1,9 +1,9 @@
 package chapter5
 
-import org.scalameter._
+import org.scalameter.{config, Key, Warmer, Measurer}
 import scala.util.Random
 
-import chapter2._
+import chapter2.{IterativeSelectionSort, RecursiveSelectionSort, MergeSortImmutableList}
 
 object SortingBenchmarks {
   def benchmark[C](sort: C => Unit, inputs: Seq[C]): Seq[Double] = {
