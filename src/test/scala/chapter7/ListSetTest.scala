@@ -3,7 +3,7 @@ package chapter7
 import util.TestSpec
 
 class ListSetTest extends TestSpec {
-  import ListSet.{SET, union, intersection}
+  import ListSet._
   
   "Sorted List Set Union" should "contain all elements of both sets" in {
     forAll { (xs: List[Int], ys: List[Int]) =>

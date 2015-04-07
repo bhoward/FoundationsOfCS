@@ -3,7 +3,7 @@ package chapter7
 // Based on Figures 7.11, 7.14, and 7.22 of Aho & Ullman
 object HashTable {
   import AssociationList.AList
-  
+
   val NUMBER_OF_BUCKETS = 5
 
   def hash(s: String): Int = {
@@ -13,6 +13,8 @@ object HashTable {
   }
 
   type TABLE[Value] = Array[AList[String, Value]]
+
+  def empty[Value]: TABLE[Value] = Array.fill(NUMBER_OF_BUCKETS)(Nil)
 
   def insert[Value](key: String, value: Value, table: TABLE[Value]): Unit = {
     val h = hash(key)
