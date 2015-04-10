@@ -35,64 +35,57 @@ object GraphTraversals {
     val result = if (cycle) Cyclic else TopologicalOrder(finished)
     (forest, result)
   }
-  
-  // iterative version, with a stack
-  def dfsStack[Node](graph: GRAPH[Node]): (FOREST[Node], DFSResult) = {
+
+  // iterative version, with a stack -- doesn't return the forest
+  def dfsStack[Node](graph: GRAPH[Node]): DFSResult = {
     import scala.collection.mutable.Stack
-    
+
+    sealed trait Action
+    case class Visit(node: Node) extends Action
+    case class Finish(node: Node) extends Action
+
     var visited = Set[Node]()
     var finished = List[Node]()
     var cycle = false
-    
-    val roots = graph.keySet.toList map { case n => (None, n) }
-    val stack = Stack(roots: _*)
+
+    val stack = Stack[Action]()
+    for (n <- graph.keySet) stack.push(Visit(n))
     while (stack.nonEmpty) {
-      val (parent, n) = stack.pop()
-      if (visited contains n) {
-        
-      } else {
-        
+      stack.pop() match {
+        case Visit(n) =>
+          if (visited contains n) {
+            if (!(finished contains n)) cycle = true
+          } else {
+            visited += n
+            stack.push(Finish(n))
+            for (n1 <- graph(n)) stack.push(Visit(n1))
+          }
+        case Finish(n) =>
+          finished ::= n
       }
     }
-    ???
+
+    if (cycle) Cyclic else TopologicalOrder(finished)
+  }
+
+  def bfsQueue[Node](start: Node, graph: GRAPH[Node]): List[Node] = {
+    import scala.collection.mutable.Queue
+
+    var visited = List[Node]()
+
+    val queue = Queue[Node]()
+    queue.enqueue(start)
+    while (queue.nonEmpty) {
+      queue.dequeue() match {
+        case n =>
+          if (visited contains n) {
+          } else {
+            visited ::= n
+            for (n1 <- graph(n)) queue.enqueue(n1)
+          }
+      }
+    }
+
+    visited.reverse
   }
 }
-
-/* from https://www.ics.uci.edu/~eppstein/161/960215.html
-    bfs(G)
-    {
-    list L = empty
-    tree T = empty
-    choose a starting vertex x
-    search(x)
-    while(L nonempty)
-        remove edge (v,w) from start of L
-        if w not yet visited
-        {
-        add (v,w) to T
-        search(w)
-        }
-    }
-
-    dfs(G)
-    {
-    list L = empty
-    tree T = empty
-    choose a starting vertex x
-    search(x)
-    while(L nonempty)
-        remove edge (v,w) from end of L
-        if w not yet visited
-        {
-        add (v,w) to T
-        search(w)
-        }
-    }
-
-    search(vertex v)
-    {
-    visit(v);
-    for each edge (v,w)
-        add edge (v,w) to end of L
-    }
-*/
