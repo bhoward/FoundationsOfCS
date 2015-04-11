@@ -33,14 +33,14 @@ class GraphTraversalsTest extends TestSpec {
   
   "Iterative Depth-First Search" should "Find a topological sort of a sample graph" in {
     inside(dfsStack(sample1)) {
-      case TopologicalOrder(ns) =>
+      case (_, TopologicalOrder(ns)) =>
         ns.head should be("BW101")
         ns.last should be("BW490")
     }
   }
 
   it should "Find a cycle in another sample graph" in {
-    dfsStack(sample2) should be(Cyclic)
+    dfsStack(sample2)._2 should be(Cyclic)
   }
   
   val sample3 = sample1 + ("BW490" -> Set("BW491")) + ("BW491" -> Set[String]())
@@ -50,6 +50,9 @@ class GraphTraversalsTest extends TestSpec {
     result.head should be("BW101")
     result.last should be("BW491")
   }
+  
+  println(dfs(sample1)._1)
+  println(dfsStack(sample1)._1)
   
   // TODO write more tests, and some properties
 }

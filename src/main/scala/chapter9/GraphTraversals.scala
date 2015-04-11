@@ -31,13 +31,13 @@ object GraphTraversals {
         }
     }
 
-    val forest = aux(graph.keySet)
+    val forest = aux(graph.keySet).reverse
     val result = if (cycle) Cyclic else TopologicalOrder(finished)
     (forest, result)
   }
 
-  // iterative version, with a stack -- doesn't return the forest
-  def dfsStack[Node](graph: GRAPH[Node]): DFSResult = {
+  // iterative version, with a stack
+  def dfsStack[Node](graph: GRAPH[Node]): (FOREST[Node], DFSResult) = {
     import scala.collection.mutable.Stack
 
     sealed trait Action
@@ -49,6 +49,7 @@ object GraphTraversals {
     var cycle = false
 
     val stack = Stack[Action]()
+    val trees = Stack[FOREST[Node]](Nil)
     for (n <- graph.keySet) stack.push(Visit(n))
     while (stack.nonEmpty) {
       stack.pop() match {
@@ -58,14 +59,20 @@ object GraphTraversals {
           } else {
             visited += n
             stack.push(Finish(n))
+            trees.push(Nil)
             for (n1 <- graph(n)) stack.push(Visit(n1))
           }
         case Finish(n) =>
           finished ::= n
+          val children = trees.pop().reverse
+          val siblings = trees.pop()
+          trees.push(TREE(n, children) :: siblings)
       }
     }
 
-    if (cycle) Cyclic else TopologicalOrder(finished)
+    val forest = trees.pop().reverse
+    val result = if (cycle) Cyclic else TopologicalOrder(finished)
+    (forest, result)
   }
 
   def bfsQueue[Node](start: Node, graph: GRAPH[Node]): List[Node] = {
