@@ -95,4 +95,6 @@ object GraphTraversals {
 
     visited.reverse
   }
+  
+  // TODO Dijkstra and Prim, using Priority Queues
 }
