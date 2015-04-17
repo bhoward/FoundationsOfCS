@@ -17,8 +17,8 @@ b:	putchar('0');
 	if (x == '1') goto c; /* transition to state c */
 	goto finis;
 
-	/* state 1 */
-c:	putchar('0');
+	/* state c */
+c:	putchar('1');
 	x = getchar();
 	if (x == '0') goto d; /* transition to state d */
 	if (x == '1') goto c; /* transition to state c */
