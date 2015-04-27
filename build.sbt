@@ -4,7 +4,8 @@ val sharedSettings = Seq(
   scalaVersion := "2.11.6"
 )
 
-lazy val fcsc = (project in file(".")).settings(sharedSettings: _*)
+lazy val fcsc = (project in file("."))
+  .settings(sharedSettings: _*)
   .settings(
     name := "fcsc-scala",
     unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil,
@@ -25,4 +26,11 @@ lazy val doc = scalatex.ScalatexReadme(
   url = "http://www.csc.depauw.edu/~bhoward/",
   source = "Doc",
   targetFolder = "target/site"
-)
+ ).settings(sharedSettings: _*)
+  .settings(
+    name := "fcsc-doc",
+    unmanagedSourceDirectories in Compile := Nil,
+    unmanagedSourceDirectories in Test := Nil,
+    unmanagedResourceDirectories in Compile := Nil,
+    unmanagedResourceDirectories in Test := Nil
+  )

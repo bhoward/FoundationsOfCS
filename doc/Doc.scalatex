@@ -1,5 +1,31 @@
-@div
-  Hello World
+@import Main._
 
-  @h1
-    I am a cow!
+@sect{Introduction}
+  @p
+    This document surveys the code examples from Alfred V. Aho and Jeffrey D. Ullman,
+    @i{Foundations of Computer Science} (C Edition), W.H. Freeman and Company, 1995.
+    For each figure from the book, it gives a transation into the Scala programming
+    language. Some examples have multiple translations, to demonstrate various styles
+    of code; in particular, a functional programming style is emphasized where possible.
+    
+@sect{Chapter 2: Iteration, Induction, and Recursion}
+  @sect{Selection Sort}
+    @p
+      Here is the iterative selection sort from Figure 2.3:
+      
+    @hl.ref(
+      wd/'original/'chapter2/"fig2.3.txt",
+      Seq("main", "void SelectionSort")
+    )
+
+    @p
+      Here is a straightforward translation into Scala:
+      
+    @hl.ref(
+      wd/'src/'main/'scala/'chapter2/"IterativeSelectionSort.scala",
+      "def selectionSort"
+    )
+        
+    @p
+      Apart from some minor syntactic differences (@i{e.g.}, Scala uses parentheses for
+      array indexing), these are essentially the same program.
