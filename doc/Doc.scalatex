@@ -184,6 +184,26 @@
       since it is much more efficient to add elements to the front of an immutable list. Therefore, when a base
       case is reached (one of the input lists is empty), the result must be reversed and concatenated (@code{:::})
       onto the front of the other list.
+      
+@sect{Chapter 5: The Tree Data Model}
+  @p
+
+@sect{Chapter 6: The List Data Model}
+  @p
+
+@sect{Chapter 7: The Set Data Model}
+  @p
+
+@sect{Chapter 9: The Graph Data Model}
+  @p
+
+@sect{Chapter 10: Patterns, Automata, and Regular Expressions}
+  @p
+
+@sect{Chapter 11: Recursive Description of Patterns}
+  @p
+
+
     
     
     
