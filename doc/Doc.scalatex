@@ -1,5 +1,8 @@
 @import Main._
 
+@val original = wd/'original
+@val translated = wd/'src/'main/'scala
+
 @sect{Introduction}
   @p
     This document surveys the code examples from Alfred V. Aho and Jeffrey D. Ullman,
@@ -11,10 +14,10 @@
 @sect{Chapter 2: Iteration, Induction, and Recursion}
   @sect{Selection Sort}
     @p
-      Here is the iterative selection sort from Figure 2.3:
+      Here is the iterative selection sort in C from Figure 2.3:
       
     @hl.ref(
-      wd/'original/'chapter2/"fig2.3.txt",
+      original/'chapter2/"fig2.3.txt",
       Seq("main", "void SelectionSort")
     )
 
@@ -22,10 +25,167 @@
       Here is a straightforward translation into Scala:
       
     @hl.ref(
-      wd/'src/'main/'scala/'chapter2/"IterativeSelectionSort.scala",
+      translated/'chapter2/"IterativeSelectionSort.scala",
       "def selectionSort"
     )
         
     @p
-      Apart from some minor syntactic differences (@i{e.g.}, Scala uses parentheses for
-      array indexing), these are essentially the same program.
+      Apart from the following minor syntactic differences, these are essentially the same program:
+    @ul
+      @li
+        Scala defines a function with @code{def name(args): type = body} instead of @code{type name(args) body}.
+      @li
+        In a related design choice, Scala declares variable types as @code{name: type} instead of @code{type name}.
+      @li
+        If a variable's type can be inferred from the value being assigned to it, then the type may be omitted
+        (hence @code{var small = i} instead of @code{var small: Int = i}).
+      @li
+        Arrays are not given special treatment in Scala: @code{Array[Int]} is a collection of integers, similar to
+        @code{vector<int>} in C++ or @code{ArrayList<Integer>} in Java. Since the fundamental operation on arrays
+        is looking up the element at an index, Scala treats the array @code{A} as a function from indices to
+        elements: @code{A(i)} is what C/C++/Java use special syntax to render as @code{A[i]}.
+      @li
+        The size of an array in Scala is available (as it is in Java) as the @code{length} attribute, so it doesn't
+        need to be passed in as a separate argument to the function.
+      @li
+        The @code{for} loop in Scala is similar to Java's for-each loop: it iterates through a collection, assigning
+        each successive value to the loop variable and evaluating the body. In the statement
+        @code{for (j <- i + 1 until A.length)}, the collection is the range of integers @code{i + 1}, @code{i + 2},
+        ..., @code{A.length - 1} -- the range @code{a until b} is the common half-open range that includes @code{a}
+        but not @code{b}, so this corresponds to the C++/Java loop @code{for (int j = i + 1; j < A.length; j++)}.
+      @li
+        Older versions of C require that you define all of the local variables at the beginning of a function. As of
+        C99, variables may be declared at the point where they are first used, just as in C++, Java, and Scala.
+      @li
+        The type @code{void} from C/C++/Java is called @code{Unit} in Scala. In each case, it signals that we do not
+        care about the return value from the function (there is only one value of type @code{Unit}, so it carries no
+        information).
+    
+  @sect{Recursive Selection Sort}
+    @p
+      In Figure 2.22, Aho & Ullman give a recursive version of selection sort:
+    
+    @hl.ref(
+      original/'chapter2/"fig2.22.txt"
+    )
+    
+    @p
+      Here is an equivalent version in Scala:
+      
+    @hl.ref(
+      translated/'chapter2/"RecursiveSelectionSort.scala",
+      "def recSelectionSort"
+    )
+    
+    @p
+      The only additional difference here not discussed above is the use of a default argument: calling
+      @code{recSelectionSort(A)} is the same as calling @code{recSelectionSort(A, 0)}. In the C version, the
+      sort needs to be initiated by calling @code{recSS(A, 0, n)}, where @code{n} is the number of elements in
+      @code{A}.
+      
+  @sect{Merge Sort}
+    @p
+      Here is the original C version of a linked-list merge sort from Aho & Ullman, Figure 2.31:
+      
+    @hl.ref(
+      original/'chapter2/"fig2.31.txt",
+      Seq("main", "LIST MergeSort")
+    )
+    
+    @p
+      This makes use of the following definition of a linked-list type:
+      
+    @hl.ref(
+      original/'chapter2/"fig2.31.txt",
+      "typedef",
+      "LIST merge"
+    )
+    
+    @p
+      In Scala, we may duplicate this definition as follows:
+      
+    @hl.ref(
+      translated/'chapter2/"MergeSortMutableList.scala",
+      "class LIST",
+      "val NULL"
+    )
+    
+    @p
+      With this definition, we get the following direct translation of the C code:
+      
+    @hl.ref(
+      translated/'chapter2/"MergeSortMutableList.scala",
+      "def mergeSort",
+      "// Convenience"
+    )
+    
+    @p
+      The only real difference to note here is that the functions are returning interesting values
+      (rather than working only by causing "side-effects"). This is the expected case in Scala, and
+      the body of a function is treated as a single expression producing the returned value -- this
+      is why Scala does not use an explicit @code{return} statement. When a block containing multiple
+      expressions in curly braces is evaluated, the returned value is the value of the last expression.
+    
+  @sect{Merge Sort with Immutable Lists}
+    @p
+      Careful examination of the @code{merge} and @code{split} functions above reveals that they both
+      modify their input list(s). Working with mutable data structures like this can be more difficult,
+      particularly when data might be shared with another part of a program, so the convention when
+      doing a more functional style of programming is to use an "immutable" list type. Scala has such
+      a type built-in: values of type @code{List[T]} are either @code{Nil}, the empty list, or
+      @code{head :: tail}, the "cons" of a head value of type @code{T} onto the front of a tail of
+      type @code{List[T]}. Once a list is "consed" together, the head and tail values may not be changed.
+      
+    @p
+      Here is a version of merge sort on the built-in immutable lists:
+      
+    @hl.ref(
+      translated/'chapter2/"MergeSortImmutableListNaive.scala",
+      "def mergeSort"
+    )
+    
+    @p
+      This code makes use of the built-in @code{splitAt} method to create two new lists, one with elements
+      from the first half of the list and the other with the rest (in fact, because of immutability, it
+      doesn't need to copy the elements out of the second half of the list -- it can just share a
+      reference to the existing data structure from the midpoint on). The @code{merge} function, instead of
+      modifying its input lists, creates a new result list by repeatedly consing the smaller of the two
+      heads of the input lists onto the front of the result of merging the rest of the input.
+      
+    @p
+      This @code{merge} function suffers from a common problem with recursion on lists:
+      when the list gets long (thousands of elements), since the function makes a recursive call for every
+      element in the list it will eventually overflow the function-call stack. Aho & Ullman's original
+      also suffered from this problem, as did the direct translation into Scala. At the expense of
+      somewhat more complicated code, it is possible to solve this by rewriting @code{merge} in what is
+      known as a "tail-recursive" style:
+      
+    @hl.ref(
+      translated/'chapter2/"MergeSortImmutableList.scala",
+      "@tailrec"
+    )
+    
+    @p
+      In tail recursion, the function makes its recursive call as the very last action; the return value
+      of the caller will be whatever is returned by the call, with no further processing. As a result, the
+      caller does not need to be kept on the stack -- in the generated code, instead of a normal function call that
+      pushes a new stack frame, it can instead replace the top stack frame with that of the callee and
+      perform a simple jump to the start of the called function. In the case of a function calling itself,
+      this often generates code that looks much like a loop; no matter how many times the function repeats,
+      the stack will not grow larger. The @code("@tailrec") annotation is not necessary, but it signals the
+      Scala compiler that it should tell us if the function isn't truly tail-recursive.
+    
+    @p
+      Since the @code{merge} function is not allowed to perform any additional processing after the recursive
+      call, not even to cons a value onto the front of the returned list, the result must be collected using
+      an extra argument, known as an "accumulator". The parameter @code{result} is the accumulator here -- it
+      is initially @code{Nil} (the default value when @code{merge} is first called), but on each recursive call
+      it will have the next smallest element added to its head. Note that it accumulates the result in reverse,
+      since it is much more efficient to add elements to the front of an immutable list. Therefore, when a base
+      case is reached (one of the input lists is empty), the result must be reversed and concatenated (@code{:::})
+      onto the front of the other list.
+    
+    
+    
+    
+    

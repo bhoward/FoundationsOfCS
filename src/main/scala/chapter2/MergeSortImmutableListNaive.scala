@@ -3,8 +3,10 @@ package chapter2
 import scala.annotation.tailrec
 
 // Based on Figure 2.31 of Aho & Ullman, using built-in
-// immutable lists (but not pattern matching on lists)
-object MergeSortImmutableList {
+// immutable lists (but not pattern matching on lists);
+// this version will overflow on large lists because merge
+// is not tail-recursive
+object MergeSortImmutableListNaive {
   import java.util.Scanner
 
   def main(args: Array[String]): Unit = {
@@ -39,17 +41,15 @@ object MergeSortImmutableList {
     }
   }
 
-  // tail-recursive to avoid stack overflow on large lists
-  @tailrec
-  def merge(list1: List[Int], list2: List[Int], result: List[Int] = Nil): List[Int] = {
+  def merge(list1: List[Int], list2: List[Int]): List[Int] = {
     if (list1 == Nil) {
-      result.reverse ::: list2
+      list2
     } else if (list2 == Nil) {
-      result.reverse ::: list1
+      list1
     } else if (list1.head <= list2.head) {
-      merge(list1.tail, list2, list1.head :: result)
+      list1.head :: merge(list1.tail, list2)
     } else {
-      merge(list1, list2.tail, list2.head :: result)
+      list2.head :: merge(list1, list2.tail)
     }
   }
 }

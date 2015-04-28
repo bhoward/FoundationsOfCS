@@ -32,7 +32,7 @@ object MergeSortMutableList {
 
   def mergeSort(list: LIST): LIST = {
     if (list == NULL) {
-      list
+      NULL
     } else if (list.next == NULL) {
       list
     } else {
