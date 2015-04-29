@@ -186,8 +186,101 @@
       onto the front of the other list.
       
 @sect{Chapter 5: The Tree Data Model}
-  @p
+  @sect{General Trees}
+    @p
+      Figures 5.15 and 5.18 of Aho & Ullman show the preorder and postorder traversals on a general tree data type,
+      where each node may have zero or more children:
+    
+    @hl.ref(
+      original/'chapter5/"fig5.15.txt",
+      "typedef struct NODE"
+    )
 
+    @hl.ref(
+      original/'chapter5/"fig5.18.txt",
+      "void postorder"
+    )
+
+    @p
+      Here are Scala equivalents, where the built-in list type is used for the children:
+    
+    @hl.ref(
+      translated/'chapter5/"GeneralTree.scala",
+      "case class Tree",
+      "def eval"
+    )
+  
+    @p
+      Other than using the general @code{for} loop to iterate through the collection of children, these can be seen
+      to be essentially the same.
+    
+    @p
+      One application of these general trees is to represent arithmetic expressions. In Figure 5.19, Aho & Ullman
+      use a variant of the tree type where each node contains both an integer value (used only at the leaves) and
+      a character operator (@code{i} for a leaf, and either @code{+}, @code{-}, @code{*}, or @code{/} at an
+      internal node). Here is the code to evaluate such a tree:
+    
+    @hl.ref(
+      original/'chapter5/"fig5.19.txt",
+      "int eval"
+    )
+  
+    @p
+      Using a string value in each node to contain either the value or the operator, here is corresponding Scala
+      code:
+    
+    @hl.ref(
+      translated/'chapter5/"GeneralTree.scala",
+      "def eval",
+      "def height"
+    )
+  
+    @p
+      Note that this application doesn't really use the generality of a list of children -- in the case of a binary
+      operator, it assumes the node will have exactly two children (accessed as @code{n->leftmostChild} and
+      @code{n->leftmostChild->rightSibling} in the C version, or @code{t.children.head} and @code{t.children.tail.head}
+      in the Scala version).
+    
+    @p
+      Another example that works on arbitrary general trees is finding the height of a tree. Here is the C version,
+      from Figure 5.22:
+    
+    @hl.ref(
+      original/'chapter5/"fig5.22.txt",
+      "void computeHt"
+    )
+  
+    @p
+      And here is corresponding code in Scala, which differs in that it returns the height rather than setting the
+      value (mutation!) of a @code{height} field in each node:
+    
+    @hl.ref(
+      translated/'chapter5/"GeneralTree.scala",
+      "def height"
+    )
+     
+    @p
+      This takes advantage of two methods that come with the @code{List} type in the standard library: @code{max}
+      and @code{map}. Given a non-empty list @code{L} of values with an ordering, @code{L.max} returns the largest
+      value in @code{L}. Given a list @code{L} of type @code{List[A]}, and a function @code{f: A => B}, the
+      operation @code{L map f} produces the list of type @code{List[B]} that results when @code{f} is applied to
+      each element of @code{L}.
+    
+  @sect{Binary Search Trees}
+    @p
+  
+  @sect{Balanced Binary Search Trees}
+    @p
+  
+  @sect{Binary Heaps}
+    @p
+  
+  @sect{Skew Heaps}
+    @p
+  
+  @sect{Comparison of Sorting Algorithms}
+    @p
+    
 @sect{Chapter 6: The List Data Model}
   @p
 

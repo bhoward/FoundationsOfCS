@@ -23,7 +23,7 @@ lazy val fcsc = (project in file("."))
 		
 lazy val doc = scalatex.ScalatexReadme(
   folder = "doc",
-  url = "http://www.csc.depauw.edu/~bhoward/",
+  url = "http://github.com/bhoward/FoundationsOfCS/tree/master",
   source = "Doc",
   targetFolder = "target/site"
  ).settings(sharedSettings: _*)
