@@ -495,7 +495,8 @@
   
   @sect{Skew Heaps}
     @p
-      An alternative functional data structure that gives a min-heap is a skew tree. This is an ordinary binary tree
+      An alternative functional data structure that gives a min-heap is a
+      @a("skew heap", href:="http://en.wikipedia.org/wiki/Skew_heap"). This is an ordinary binary tree
       satisfying the heap ordering property. Rather than obeying a strict balance condition, skew heaps guarantee
       only an "amortized" logarithmic time behavior -- although any individual operation might be expensive, the
       running time of k operations on a heap of size N will be O(k log N). The key to the behavior of the skew heap
