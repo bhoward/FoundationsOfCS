@@ -7,16 +7,16 @@ typedef int BOOLEAN;
 
 typedef struct CELL *LIST;
 struct CELL {
-	int element;
-	LIST next;
+    int element;
+    LIST next;
 };
 
 BOOLEAN lookup(int x, LIST L)
 {
-	if (L == NULL)
-		return FALSE;
-	else if (x == L->element)
-		return TRUE;
-	else
-		return lookup(x, L->next);
+    if (L == NULL)
+        return FALSE;
+    else if (x == L->element)
+        return TRUE;
+    else
+        return lookup(x, L->next);
 }

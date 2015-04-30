@@ -8,18 +8,18 @@ typedef int ETYPE;
 
 typedef struct NODE *TREE;
 struct NODE {
-	ETYPE element;
-	TREE leftChild, rightChild;
+    ETYPE element;
+    TREE leftChild, rightChild;
 };
 
 BOOLEAN lookup(ETYPE x, TREE T)
 {
-	if (T == NULL)
-		return FALSE;
-	else if (x == T->element)
-		return TRUE;
-	else if (x < T->element)
-		return lookup(x, T->leftChild);
-	else /* x must be > T->element */
-		return lookup(x, T->rightChild);
+    if (T == NULL)
+        return FALSE;
+    else if (x == T->element)
+        return TRUE;
+    else if (x < T->element)
+        return lookup(x, T->leftChild);
+    else /* x must be > T->element */
+        return lookup(x, T->rightChild);
 }

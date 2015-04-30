@@ -2,18 +2,18 @@
 
 typedef struct NODE *pNODE;
 struct NODE {
-	char nodeLabel;
-	pNODE leftmostChild, rightSibling;
+    char nodeLabel;
+    pNODE leftmostChild, rightSibling;
 };
 
 void postorder(pNODE n)
 {
-	pNODE c; /* a child of node n */
+    pNODE c; /* a child of node n */
 
-	c = n->leftmostChild;
-	while (c != NULL) {
-		postorder(c);
-		c = c->rightSibling;
-	}
-	printf("\%c\n", n->nodeLabel);
+    c = n->leftmostChild;
+    while (c != NULL) {
+        postorder(c);
+        c = c->rightSibling;
+    }
+    printf("\%c\n", n->nodeLabel);
 }

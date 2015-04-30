@@ -5,16 +5,16 @@
 typedef int BOOLEAN;
 
 typedef struct {
-	int A[MAX];
-	int length;
+    int A[MAX];
+    int length;
 }  LIST;
 
 BOOLEAN lookup(int x, LIST *pL)
 {
-	int i;
+    int i;
 
-	for (i = 0; i < pL->length; i++)
-		if (x == pL->A[i])
-			return TRUE;
-	return FALSE;
+    for (i = 0; i < pL->length; i++)
+        if (x == pL->A[i])
+            return TRUE;
+    return FALSE;
 }

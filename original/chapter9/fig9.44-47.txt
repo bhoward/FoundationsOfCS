@@ -8,15 +8,15 @@ typedef int POTNODE;
 
 typedef struct CELL *LIST;
 struct CELL {
-	NODE nodeName;
-	float nodeLabel;
-	LIST next;
+    NODE nodeName;
+    float nodeLabel;
+    LIST next;
 };
 
 typedef struct {
-	float dist;
-	LIST successors;
-	POTNODE toPOT;
+    float dist;
+    LIST successors;
+    POTNODE toPOT;
 } GRAPH[MAX];
 
 typedef NODE POT[MAX+1];
@@ -27,77 +27,77 @@ POTNODE last;
 
 void swap(POTNODE a, POTNODE b, GRAPH G, POT P)
 {
-	NODE temp; /* used to swap POT nodes */
+    NODE temp; /* used to swap POT nodes */
 
-	temp = P[b];
-	P[b] = P[a];
-	P[a] = temp;
-	G[P[a]].toPOT = a;
-	G[P[b]].toPOT = b;
+    temp = P[b];
+    P[b] = P[a];
+    P[a] = temp;
+    G[P[a]].toPOT = a;
+    G[P[b]].toPOT = b;
 }
 
 float priority(POTNODE a, GRAPH G, POT P)
 {
-	return G[P[a]].dist;
+    return G[P[a]].dist;
 }
 
 void bubbleUp(POTNODE a, GRAPH G, POT P)
 {
-	if ((a > 1) &&
-			(priority(a, G, P) < priority(a/2, G, P))) {
-		swap(a, a/2, G, P);
-		bubbleUp(a/2, G, P);
-	}
+    if ((a > 1) &&
+            (priority(a, G, P) < priority(a/2, G, P))) {
+        swap(a, a/2, G, P);
+        bubbleUp(a/2, G, P);
+    }
 }
 
 void bubbleDown(POTNODE a, GRAPH G, POT P, int last)
 {
-	POTNODE child;
+    POTNODE child;
 
-	child = 2*a;
-	if (child < last &&
-						priority(child+1, G, P) < priority(child, G, P))
-		++child;
-	if (child <= last &&
-			priority(a, G, P) > priority(child, G, P)) {
-		swap(a, child, G, P);
-		bubbleDown(child, G, P, last);
-	}
+    child = 2*a;
+    if (child < last &&
+                        priority(child+1, G, P) < priority(child, G, P))
+        ++child;
+    if (child <= last &&
+            priority(a, G, P) > priority(child, G, P)) {
+        swap(a, child, G, P);
+        bubbleDown(child, G, P, last);
+    }
 }
 
 void initialize(GRAPH G, POT P, int *pLast)
 {
-	int i; /* we use i as both a graph and a tree node */
+    int i; /* we use i as both a graph and a tree node */
 
-	for (i = 0; i < MAX; i++) {
-		G[i].dist = INFTY;
-		G[i].toPOT = i+1;
-		P[i+1] = i;
-	}
-	G[0].dist = 0;
-	(*pLast) = MAX;
+    for (i = 0; i < MAX; i++) {
+        G[i].dist = INFTY;
+        G[i].toPOT = i+1;
+        P[i+1] = i;
+    }
+    G[0].dist = 0;
+    (*pLast) = MAX;
 }
 
 void Dijkstra(GRAPH G, POT P, int *pLast)
 {
-	NODE u, v; /* v is the node we select to settle */
-	LIST ps; /* ps runs down the list of successors of v;
-			u is the successor pointed to by ps */
+    NODE u, v; /* v is the node we select to settle */
+    LIST ps; /* ps runs down the list of successors of v;
+            u is the successor pointed to by ps */
 
-	initialize(G, P, pLast);
-	while ((*pLast) > 1) {
-		v = P[1];
-		swap(1, *pLast, G, P);
-		--(*pLast);
-		bubbleDown(1, G, P, *pLast);
-		ps = G[v].successors;
-		while (ps != NULL) {
-			u = ps->nodeName;
-			if (G[u].dist > G[v].dist + ps->nodeLabel) {
-				G[u].dist = G[v].dist + ps->nodeLabel;
-				bubbleUp(G[u].toPOT, G, P);
-			}
-			ps = ps->next;
-		}
-	}
+    initialize(G, P, pLast);
+    while ((*pLast) > 1) {
+        v = P[1];
+        swap(1, *pLast, G, P);
+        --(*pLast);
+        bubbleDown(1, G, P, *pLast);
+        ps = G[v].successors;
+        while (ps != NULL) {
+            u = ps->nodeName;
+            if (G[u].dist > G[v].dist + ps->nodeLabel) {
+                G[u].dist = G[v].dist + ps->nodeLabel;
+                bubbleUp(G[u].toPOT, G, P);
+            }
+            ps = ps->next;
+        }
+    }
 }

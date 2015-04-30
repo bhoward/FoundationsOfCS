@@ -3,17 +3,17 @@
 typedef int BOOLEAN;
 
 typedef struct {
-	int A[MAX];
-	int length;
+    int A[MAX];
+    int length;
 }  LIST;
 
 BOOLEAN lookup(int x, LIST *pL)
 {
-	int i;
+    int i;
 
-	pL->A[pL->length] = x;
-	i = 0;
-	while (x != pL->A[i])
-		i++;
-	return (i < pL->length);
+    pL->A[pL->length] = x;
+    i = 0;
+    while (x != pL->A[i])
+        i++;
+    return (i < pL->length);
 }
