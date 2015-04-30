@@ -445,9 +445,69 @@
   
   @sect{Binary Heaps}
     @p
+      Another application of a binary tree is the (binary) heap, where the ordering property goes from top to bottom
+      instead of left to right. That is, in a min-heap, each node's value must be less than or equal to its children's
+      values. Therefore, the minimum value overall must be at the root. A heap provides an efficient implementation
+      of a priority queue, where elements will be dequeued in order, least to greatest (for a min-heap; a max-heap
+      goes greatest to least).
+      
+    @p
+      Aho & Ullman give an implementation of binary heaps, which satisfy both the heap ordering property and the
+      additional balancing property that every level of the tree is full except possibly the last, which must be
+      filled from the left. This balancing property allows an efficient representation of the tree as an array (the
+      contents of the tree in level-order). Here is their C code, from Figure 5.54:
+      
+    @hl.ref(
+      original/'chapter5/"fig5.54.txt",
+      Seq("void swap", "void swap"),
+      "main"
+    )
+  
+    @hl.ref(
+      original/'chapter5/"fig5.54.txt",
+      Seq("main", "void heapsort")
+    )
+    
+    @p
+      Aho & Ullman implemented a max-heap. Here is a direct translation into Scala, except for a min-heap (for
+      consistency with other examples):
+      
+    @hl.ref(
+      translated/'chapter5/"BinaryHeap.scala",
+      "class Heap",
+      "def main"
+    )
+    
+    @p
+      There are two minor differences in this code from the C original:
+    @ul
+      @li
+        The @code{bubbleUp}, @code{bubbleDown}, and @code{swap} methods, as well as the array itself, are
+        encapsulated in a @code{Heap} object. Only the @code{insert}, @code{insertAll} (which replaces the original
+        @code{heapify} -- see below), @code{findMin}, @code{deleteMin}, and @code{clear} methods are exposed.
+      @li
+        Because the array is private to the heap object, the @code{heapify} function isn't used to take an existing
+        array and apply the heap ordering property. Instead, the @code{insertAll} method copies values from a list
+        into the array and then heapifies it. Similarly, the @code{heapsort} function of Aho & Ullman works by
+        mutating the array passed in to it, while the Scala @code{heapSort} function copies from a list into the
+        heap and then extracts a sorted list of values (note the now-familiar use of an accumulator in
+        @code{removeAll} to achieve tail-recursion) to be returned.
   
   @sect{Skew Heaps}
     @p
+      An alternative functional data structure that gives a min-heap is a skew tree. This is an ordinary binary tree
+      satisfying the heap ordering property. Rather than obeying a strict balance condition, skew heaps guarantee
+      only an "amortized" logarithmic time behavior -- although any individual operation might be expensive, the
+      running time of k operations on a heap of size N will be O(k log N). The key to the behavior of the skew heap
+      is the @code{merge} operation, which combines two heaps into one -- it avoids a tendency to become unbalanced
+      by continually swapping left and right children when performing the merge. The other main operations,
+      @code{insert} and @code{deleteMin}, are easily implemented in terms of @code{merge}. Here is the code:
+      
+    @hl.ref(
+      translated/'chapter5/"SkewHeap.scala",
+      "sealed trait Heap",
+      "def main"
+    )
   
   @sect{Comparison of Sorts}
     @p
