@@ -1,5 +1,7 @@
 package chapter5
 
+import scala.annotation.tailrec
+
 // Based on Figures 5.34, 5.35, and 5.40 of Aho & Ullman
 object BinarySearchTree {
   sealed trait BST
@@ -67,6 +69,7 @@ object BinarySearchTree {
   def insert1(t: BST, x: Int): BST = {
     import scala.util.control.TailCalls.{TailRec, tailcall, done}
 
+    @tailrec
     def aux(t: BST, k: BST => TailRec[BST]): TailRec[BST] = t match {
       case Empty => tailcall(k(Node(Empty, x, Empty)))
       case Node(l, v, r) =>
@@ -78,6 +81,22 @@ object BinarySearchTree {
     }
 
     aux(t, a => done(a)).result
+  }
+
+  // non-trampolined CPS version for comparison
+  def insert1a(t: BST, x: Int): BST = {
+    @tailrec
+    def aux(t: BST, k: BST => BST): BST = t match {
+      case Empty => k(Node(Empty, x, Empty))
+      case Node(l, v, r) =>
+        if (x < v) {
+          aux(l, a => k(Node(a, v, r)))
+        } else {
+          aux(r, a => k(Node(l, v, a)))
+        }
+    }
+
+    aux(t, a => a)
   }
 
   // naive version -- overflows stack with large unbalanced tree
@@ -92,7 +111,8 @@ object BinarySearchTree {
       case Nil                       => result
       case Empty :: tail             => aux(tail, result)
       case Node(l, v, Empty) :: tail => aux(l :: tail, v :: result)
-      case Node(l, v, r) :: tail     => aux(r :: Node(Empty, v, Empty) :: l :: tail, result)
+      case Node(l, v, r) :: tail     =>
+        aux(r :: Node(Empty, v, Empty) :: l :: tail, result)
     }
 
     aux(List(t), Nil)

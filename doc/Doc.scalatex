@@ -268,9 +268,180 @@
     
   @sect{Binary Search Trees}
     @p
+      Here is the C version of binary search tree (BST) lookup, insertion, and deletion, from Figures 5.34, 5.35,
+      and 5.40 of Aho & Ullman:
+      
+    @hl.ref(
+      original/'chapter5/"fig5.34.txt",
+      "typedef struct NODE"
+    )
+  
+    @hl.ref(
+      original/'chapter5/"fig5.35.txt",
+      "TREE insert"
+    )
+  
+    @hl.ref(
+      original/'chapter5/"fig5.40.txt",
+      "ETYPE deletemin"
+    )
+    
+    @p
+      Here is a Scala translation of the above functions:
+      
+    @hl.ref(
+      translated/'chapter5/"BinarySearchTree.scala",
+      "sealed trait BST",
+      "def height"
+    )
+  
+    @hl.ref(
+      translated/'chapter5/"BinarySearchTree.scala",
+      "def contains",
+      "def findMin"
+    )
+  
+    @hl.ref(
+      translated/'chapter5/"BinarySearchTree.scala",
+      "// naive",
+      "// trampolined"
+    )
+  
+    @hl.ref(
+      translated/'chapter5/"BinarySearchTree.scala",
+      "def findMin",
+      "// naive"
+    )
+    
+    @p
+      There are a few places where the Scala code diverges from the original C version. Trivially, the @code{lookup}
+      function is renamed @code{contains}, for consistency with later examples, and @code{insert} is called
+      @code{insert0}, to distinguish it from a better version discussed below. More significantly, the @code{delete}
+      and @code{deleteMin} functions return a new tree rather than modifying the input tree; this can be done
+      efficiently because only a few nodes will need to be re-created, with most of the original tree being shared
+      (and the only reason this sharing is safe is because the tree is immutable). Since @code{deleteMin} needs to
+      return a tree, the operation of returning the deleted minimum value has been split off into a separate function,
+      @code{findMin}. This function returns an @code{Option[Int]} -- this is a type that either provides a value of the
+      form @code{Some(x)}, which wraps up an actual @code{Int} value @code{x}, or it provides the value @code{None},
+      indicating that there was no result available. In the case of @code{findMin}, if the tree is empty then there is
+      no minimum value; using the option type is a useful alternative to throwing an exception or returning a special
+      value (such as @code{Integer.MAX_VALUE}, or a null reference).
+      
+    @p
+      Another difference is in the insertion function, where the C version ignores duplicates but the Scala version
+      will go ahead and insert them -- this is needed for the application below of binary search trees to sorting, where
+      duplicates need to be preserved. Finally, the Scala tree functions are defined using "pattern matching" -- the
+      two cases by which trees may be constructed, @code{Empty} and @code{Node(l, v, r)}, are mirrored in the cases that
+      each function handles in its @code{match} statement. Here is a simple example of a pattern-matching function
+      defined on trees, to compute the height of a BST. Note the use of the wildcard pattern, @code{_}, to match a
+      value without giving it a name:
+      
+    @hl.ref(
+      translated/'chapter5/"BinarySearchTree.scala",
+      "def height",
+      "def contains"
+    )      
+      
+  @sect{Tree Sort}
+    @p
+      Since a BST maintains its values in sorted order, one way to sort a list of values is to insert them all into a
+      BST and then retrieve them with an inorder traversal:
+      
+    @hl.ref(
+      translated/'chapter5/"BinarySearchTree.scala",
+      "def inorder0",
+      "// tail-recursive"
+    )
+    
+    @hl.ref(
+      translated/'chapter5/"BinarySearchTree.scala",
+      "def insertAll",
+      "def treeSortNaive"
+    )
+    
+    @p
+      (In this code, references to @code{insert} and @code{inorder} may be replaced with either the naive versions,
+      @code{insert0} and @code{inorder0}, or with the better-behaved versions discussed below.)
+    
+  @sect{Avoiding Stack Overflow}
+    @p
+      It was mentioned above that the @code{insert0} function needs improvement. Just as with the @code{merge} function
+      on lists discussed in @sect.ref{Merge Sort with Immutable Lists}, the naive version of tree insertion given by
+      Aho & Ullman will overflow the function call stack if the tree gets too deep. This typically happens when the
+      BST becomes unbalanced, for example when a large sequence of values are inserted in order, so that all of them
+      are inserted along the same path of the tree. The better solution to this is to work to ensure balance, as done
+      in the following section. However, the insertion function may be rewritten in a tail-recursive style that avoids
+      the stack overflow by making use of two additional techniques: continuations and trampolines. Similarly, the
+      inorder traversal function defined above, @code{inorder0}, will also overflow on large, unbalanced trees.
+      
+    @p
+      First, here is a better version of inorder traversal. It uses an accumulator, like the tail-recursive merge function,
+      to collect up the resulting list rather than try to construct the result after each nested function call returns
+      (which would violate tail recursion). It also uses an auxilliary function, defined within the body of @code{inorder1},
+      to actually perform the recursion, because each recursive call will be given a @i{list} of trees to traverse, along
+      with the accumulator argument (@code{result}). Passing a list of trees is equivalent to using an explicit stack to
+      keep track of which sub-trees need to be traversed next -- see the discussion of iterative versus recursive graph
+      traversals in @sect.ref{Chapter 9: The Graph Data Model}. Finally, since it is building up the result in reverse,
+      it visits the right child of each node before the node itself, and then does the left child last.
+      
+    @hl.ref(
+      translated/'chapter5/"BinarySearchTree.scala",
+      "def inorder1",
+      "// choose"
+    )
+      
+    @p
+      A generalization of using an accumulator is to use a "continuation" -- this is a function argument that tells what
+      to do next (@i{i.e.}, how to continue) once a result is produced. Thus, instead of writing, for example,
+      @code{f(x) + y}, the function @code{f} is modified to take an extra parameter, @code{k}, which it will apply to its
+      result instead of returning it. The operation of adding @code{y} to the return value from @code{f} in the example
+      would then turn into the call @code{f(x, result => result + y)}. If all functions are converted into this
+      "continuation-passing style", then every function ends by calling another; since none of these functions returns
+      anything, their stack frames do not need to be kept and the tail-call optimization can prevent overflow. To get a
+      value back, the original call is passed the identity function as a continuation, saying that when the final result
+      is produced, the next thing to do is simply return that value. Here is the insertion function rewritten in
+      continuation-passing style:
+      
+    @hl.ref(
+      translated/'chapter5/"BinarySearchTree.scala",
+      "def insert1a",
+      "// naive"
+    )
+    
+    @p
+      Unfortunately, the JVM is not able to do the tail-call optimization by itself, so @code{insert1a} will also
+      lead to a stack overflow. However, Scala includes a helper class in its standard library that will use a
+      technique called "trampolining" to allow us to perform this optimization. The idea is that instead of making
+      a tail call, each function should return an object describing what it wants to do next: either call another
+      function (@code{tailcall(k(...))}) or end the chain by producing a value (@code{done(x)}). By returning this
+      object, the function's frame is popped from the stack. The object gets returned to the "trampoline", which
+      "bounces" control on to the next function in the case of a @code{tailcall}. Here is the final version of BST
+      insertion, which successfully avoids stack overflow:
+      
+    @hl.ref(
+      translated/'chapter5/"BinarySearchTree.scala",
+      "def insert1",
+      "// non-trampolined"
+    )
   
   @sect{Balanced Binary Search Trees}
     @p
+      Of course, when using binary search trees, the whole point is to keep them at least roughly balanced, to get
+      the logarithmic time guarantees for the basic operations. One simple strategy for doing this is to use an AVL
+      tree, which maintains the invariant that the difference in height between any node's children is no more than
+      one. This self-balancing tree structure was discovered in the early 1960's by Georgy Adelson-Velsky and
+      E. M. Landis. A functional version of an AVL tree is particularly easy to create, because only two additions
+      are needed to the above code: each node will also contain its height, and whenever a new tree node is created,
+      rather than using the @code{Node} constructor directly, we will call the function @code{balance}, which will
+      perform appropriate tree rotations to the subtrees to ensure the AVL balance condition is maintained. See a
+      data structures text, or @a("Wikipedia", href:="http://en.wikipedia.org/wiki/AVL_tree"), for details. Here is
+      the complete code (note that we don't need to worry about tail-recursion here, since the trees will always be
+      shallow):
+      
+    @hl.ref(
+      translated/'chapter5/"AVLBinarySearchTree.scala",
+      "sealed trait BST"
+    )
   
   @sect{Binary Heaps}
     @p
@@ -278,7 +449,7 @@
   @sect{Skew Heaps}
     @p
   
-  @sect{Comparison of Sorting Algorithms}
+  @sect{Comparison of Sorts}
     @p
     
 @sect{Chapter 6: The List Data Model}

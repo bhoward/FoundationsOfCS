@@ -16,7 +16,8 @@ object AVLBinarySearchTree {
   // AVL balance condition: diff between child heights is at most 1.
   def balance(left: BST, value: Int, right: BST): BST = {
     val diff = left.height - right.height
-    if (math.abs(diff) > 2) sys.error("Balance out of whack: " + left + ", " + right)
+    if (math.abs(diff) > 2)
+      sys.error("Balance out of whack: " + left + ", " + right)
     if (diff == -2) {
       // right is high
       val Node(rl, rv, rr) = right.asInstanceOf[Node]
