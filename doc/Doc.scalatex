@@ -510,9 +510,6 @@
       "def main"
     )
   
-  @sect{Comparison of Sorts}
-    @p
-    
 @sect{Chapter 6: The List Data Model}
   @p
 
