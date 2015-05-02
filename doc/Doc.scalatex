@@ -511,8 +511,286 @@
     )
   
 @sect{Chapter 6: The List Data Model}
-  @p
-
+  @sect{Linked Lists}
+    @p
+      Here is the singly-linked list from Aho & Ullman, Figures 6.3, 6.4, and 6.5. The lookup and delete functions
+      do a linear search through the list nodes.
+    
+    @hl.ref(
+      original/'chapter6/"fig6.3.txt",
+      "typedef struct CELL"
+    )
+    
+    @hl.ref(
+      original/'chapter6/"fig6.4.txt",
+      "void delete"
+    )
+    
+    @hl.ref(
+      original/'chapter6/"fig6.5.txt",
+      "void insert"
+    )
+    
+    @p
+      Here is a direct translation of the above into Scala. Since Java and Scala do not have explicit pointers,
+      the insert and delete functions have to return the modified list. That is, instead of calling
+      @code{insert(x, &L)} and allowing the function to change the list @code{L} directly (this is C's version of
+      call-by-reference, without the C++ syntactic sugar of reference parameters), in Java or Scala we must write
+      @code{L = insert(x, L)}. Note that this is different from saying that the Java or Scala versions are
+      immutable -- they will still modify the next pointers within the nodes of the list. Rather, the result needs
+      to be assigned back to @code{L} in case the @i{head} node of the list changed identity.
+    
+    @hl.ref(
+      translated/'chapter6/"LinkedList.scala",
+      "class LIST"
+    )
+  
+    @p
+      For comparison, here is an immutable version, which is essentially the same as the implementation of Scala's
+      built-in list type. Note that it does pattern matching on the two cases of a list: @code{NULL} and @code{CONS}.
+      In this case, once a @code{CONS} cell is created it will never be changed, so upon insertion or deletion any
+      affected nodes must be copied to new cells.
+    
+    @hl.ref(
+      translated/'chapter6/"ImmutableLinkedList.scala",
+      "sealed trait LIST"
+    )
+  
+  @sect{Sorted Linked Lists}
+    @p
+      By doing the extra work of inserting new values in sorted order, the lookup and delete functions may quit early,
+      as soon as they determine that the desired value can't possibly be located past the current point in the list.
+      Aho & Ullman give only the @code{lookup} function, in Figure 6.6, leaving insertion and deletion as exercises.
+    
+    @hl.ref(
+      original/'chapter6/"fig6.6.txt",
+      "typedef struct CELL"
+    )
+    
+    @p
+      Here is the corresponding Scala version, now using the built-in list type.
+    
+    @hl.ref(
+      translated/'chapter6/"SortedList.scala",
+      "type LIST"
+    )
+  
+  @sect{Doubly Linked Lists}
+    @p
+      To enable efficient insertion and deletion in the middle of a linked list, each node may be given a pointer to
+      the previous node as well as to the next node. Here is the C version of deletion, from Figure 6.9 of Aho & Ullman:
+    
+    @hl.ref(
+      original/'chapter6/"fig6.9.txt",
+      "typedef struct CELL"
+    )
+    
+    @p
+      Here is a Scala version of doubly-linked lists, fleshing out the details and providing a range of useful methods.
+      The list always contains at least one node -- the head node, whose next reference points to the start of the list
+      and whose previous reference points to the end of the list (unless the list is empty, in which case both point
+      back to itself). It is a circular list, because the end node's next reference points back to the head, as does the
+      start node's previous reference.
+    
+    @hl.ref(
+      translated/'chapter6/"DoublyLinkedList.scala",
+      "// This"
+    )
+      
+  @sect{Array-Based Lists}
+    @p
+      In Figure 6.11, Aho & Ullman show how to use a fixed-size array as a (bounded) list, giving just the lookup
+      function.
+    
+    @hl.ref(
+      original/'chapter6/"fig6.11.txt",
+      "typedef struct"
+    )
+    
+    @p
+      A refinement of the previous example is given in Figure 6.12, which shows that the logic in the lookup loop
+      can be simplified if the desired value is copied as a "sentinel" into the first unused position of the array.
+      This assumes that the length of the list is at most @code{MAX - 1}.
+      
+    @hl.ref(
+      original/'chapter6/"fig6.12.txt",
+      "BOOLEAN lookup"
+    )
+    
+    @p
+      Lookup in an array-based list may be significantly sped up by keeping the list in order and using binary search.
+      Unlike lookup on a sorted linked list, which was on average only twice as fast as a brute-force linear search,
+      binary search will take only logarithmic time -- thus, on a list of a million elements, it might only have to
+      look at twenty or so. Here is the code from Figure 6.14:
+    
+    @hl.ref(
+      original/'chapter6/"fig6.14.txt",
+      "BOOLEAN binsearch"
+    )
+    
+    @p
+      Here is an expanded Scala version of the array-based list examples. Instead of a fixed maximum size, this is
+      an adaptive array list that will expand as needed. The private utility method @code{addOneToLength} will
+      always maintain the invariant that the length of the list is less than the size of the allocated array; if
+      the additional element would violate this, then the entire array is copied into a new one of twice the size.
+      This means that an individual insertion at the end of the list might take more than constant time, although
+      the amortized time will still be constant (that is, k successive insertions will take O(k) time).
+      
+    @p
+      Note that sorted insertion cannot take advantage of binary search -- although it could be used to find the
+      correct position to insert at in logarithmic time, the values from that point to the end would still need
+      to be shifted to make room, resulting in a net linear time operation.
+      
+    @p
+      One final note is that Aho & Ullman's binary search contains a subtle bug, in case the array grows very large:
+      the calculation @code{mid = (low + high)/2} might overflow, even though @code{low} and @code{high} are still
+      within the range of legal integers. Rewriting the calculation as @code{mid = low + (high - low)/2} avoids this
+      problem.
+    
+    @hl.ref(
+      translated/'chapter6/"ArrayList.scala",
+      "val INITIAL_SIZE"
+    )
+  
+  @sect{Stacks}
+    @p
+      Figure 6.17 of Aho & Ullman gives an implementation of the stack datatype built on top of an array.
+    
+    @hl.ref(
+      original/'chapter6/"fig6.17.txt",
+      "typedef struct"
+    )
+    
+    @p
+      In Figure 6.18, an alternate implementation of stacks is given that uses a linked list.
+    
+    @hl.ref(
+      original/'chapter6/"fig6.18.txt",
+      "typedef struct"
+    )
+    
+    @p
+      For the translation of stacks to Scala, several implementations will be given. Here is the trait
+      (essentially a Java interface) that all of them extend (it adds a @code{peek} method to look at the
+      top of the stack without removing it; the @code{pop} method returns only a boolean indicating
+      success, since Scala doesn't allow the C version's use of a reference parameter to also return the
+      removed element):
+    
+    @hl.ref(
+      translated/'chapter6/"Stacks.scala",
+      "trait Stack",
+      "class ArrayStack"
+    )
+    
+    @p
+      Here is an array-based implementation, similar to Figure 6.17:
+  
+    @hl.ref(
+      translated/'chapter6/"Stacks.scala",
+      "class ArrayStack",
+      "class ListStack"
+    )
+    
+    @p
+      This is an implementation using the built-in list type, where the head of the list is the top of the stack.
+  
+    @hl.ref(
+      translated/'chapter6/"Stacks.scala",
+      "class ListStack",
+      "class MutableListStack"
+    )
+    
+    @p
+      Here is a list-based implementation akin to Figure 6.18. Since insertion and deletion occur only at the
+      head of the list, the mutability of the list nodes is not used.
+  
+    @hl.ref(
+      translated/'chapter6/"Stacks.scala",
+      "class MutableListStack",
+      "class DoublyLinkedListStack"
+    )
+    
+    @p
+      Finally, here is an implementation of stacks using the doubly-linked list class from above. The Scala
+      feature where imports may be renamed, as in @code("import DoublyLinkedList.{ clear => DLLclear }"), is
+      used to avoid conflict between the stack versions of @code{clear} and @code{isEmpty} and the imported
+      list versions (which are renamed to @code{DLLclear} and @code{DLLisEmpty}). The occasional comments
+      @code{// scalastyle:ignore} mark lines that the @a("Scalastyle", href:="http://www.scalastyle.org/")
+      tool would flag with warnings of potentially incorrect code, to say that yes, we do know what we are doing.
+  
+    @hl.ref(
+      translated/'chapter6/"Stacks.scala",
+      "class DoublyLinkedListStack"
+    )
+  
+  @sect{Queues}
+    @p
+      Figure 6.29 shows a linked-list implementation of a queue datatype.
+    
+    @hl.ref(
+      original/'chapter6/"fig6.29.txt",
+      "typedef struct"
+    )
+    
+    @p
+      Again, several Scala implementations will be given to show a variety of techniques. Here
+      is the common trait they all extend:
+    
+    @hl.ref(
+      translated/'chapter6/"Queues.scala",
+      "trait Queue",
+      "class ArrayQueue"
+    )
+  
+    @p
+      First is an array-based implementation, which gives a bounded queue. For efficiency, elements
+      are never shifted upon insertion or deletion; instead, the queue is circular -- it will wrap around
+      from @code{A(MAX - 1)} to @code{A(0)}. The index @code{front} gives the first element in the queue,
+      and @code{back} gives the next available space after the last element. For simplicity, the queue is
+      never allowed to contain more than @code{MAX - 1} elements, so that when @code{front} equals
+      @code{back}, we know that the queue is empty.
+    
+    @hl.ref(
+      translated/'chapter6/"Queues.scala",
+      "class ArrayQueue",
+      "class ListQueue"
+    )
+  
+    @p
+      Here is a functional queue implementation, using the built-in list type. For efficiency, the queue
+      is maintained as two lists (essentially a pair of stacks): values are always enqueued to the back
+      list, and dequeued from the front list. When the front list is emptied, the back list will be
+      reversed and used as the new front list. This is another amortized constant time situation: when
+      a value is dequeued and the front list is empty, it will take linear time to reverse the back list;
+      however, this can only happen after a corresponding number of constant-time enqueues, so the net
+      time to perform k enqueues and dequeues will be O(k).
+    
+    @hl.ref(
+      translated/'chapter6/"Queues.scala",
+      "class ListQueue",
+      "class MutableListQueue"
+    )
+  
+    @p
+      An alternate linked list implementation is to use mutable list nodes and maintain pointers to both
+      the first and the last nodes in the list. Enqueues can be done efficiently by tacking a new node
+      onto the end of the list, while dequeues can remove from the head.
+    
+    @hl.ref(
+      translated/'chapter6/"Queues.scala",
+      "class MutableListQueue",
+      "class DoublyLinkedListQueue"
+    )
+  
+    @p
+      Finally, here is an implementation using the doubly-linked list class again, very similar to the
+      final implementation of stacks above.
+    
+    @hl.ref(
+      translated/'chapter6/"Queues.scala",
+      "class DoublyLinkedListQueue"
+    )
+  
 @sect{Chapter 7: The Set Data Model}
   @p
 
