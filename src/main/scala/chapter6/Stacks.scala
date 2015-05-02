@@ -64,7 +64,7 @@ object Stacks {
     def isFull: Boolean = false
 
     def peek: Option[Int] = L match {
-      case Nil => None
+      case Nil       => None
       case head :: _ => Option(head)
     }
 
@@ -120,7 +120,14 @@ object Stacks {
   }
 
   class DoublyLinkedListStack extends Stack {
-    import DoublyLinkedList.{ empty, clear => DLLclear, isEmpty => DLLisEmpty, front, deleteFront, insertFront }
+    import DoublyLinkedList.{
+      empty,
+      clear => DLLclear,
+      isEmpty => DLLisEmpty,
+      front,
+      deleteFront,
+      insertFront
+    }
 
     private val L = empty
 
@@ -132,7 +139,8 @@ object Stacks {
 
     def peek: Option[Int] = front(L)
 
-    def pop(): Boolean = !isEmpty && { deleteFront(L); true } // scalastyle:ignore
+    def pop(): Boolean =
+      !isEmpty && { deleteFront(L); true } // scalastyle:ignore
 
     def push(x: Int): Boolean = { insertFront(x, L); true }
   }

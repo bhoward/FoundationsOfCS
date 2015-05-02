@@ -156,7 +156,14 @@ object Queues {
   }
 
   class DoublyLinkedListQueue extends Queue {
-    import DoublyLinkedList.{ empty, clear => DLLclear, isEmpty => DLLisEmpty, front, deleteFront, insertBack }
+    import DoublyLinkedList.{
+      empty,
+      clear => DLLclear,
+      isEmpty => DLLisEmpty,
+      front,
+      deleteFront,
+      insertBack
+    }
 
     private val L = empty
 
@@ -168,7 +175,8 @@ object Queues {
 
     def peek: Option[Int] = front(L)
 
-    def dequeue(): Boolean = !isEmpty && { deleteFront(L); true } // scalastyle:ignore
+    def dequeue(): Boolean =
+      !isEmpty && { deleteFront(L); true } // scalastyle:ignore
 
     def enqueue(x: Int): Boolean = { insertBack(x, L); true }
   }

@@ -41,7 +41,8 @@ object MergeSortImmutableList {
 
   // tail-recursive to avoid stack overflow on large lists
   @tailrec
-  def merge(list1: List[Int], list2: List[Int], result: List[Int] = Nil): List[Int] = {
+  def merge(list1: List[Int], list2: List[Int],
+            result: List[Int] = Nil): List[Int] = {
     if (list1 == Nil) {
       result.reverse ::: list2
     } else if (list2 == Nil) {

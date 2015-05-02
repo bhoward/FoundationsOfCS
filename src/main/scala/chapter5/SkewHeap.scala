@@ -38,12 +38,13 @@ object SkewHeap {
   }
 
   // tail-recursive version
-  def removeAll(h: Heap, result: List[Int] = Nil): List[Int] = findMin(h) match {
-    case None => result.reverse
-    case Some(m) => {
-      removeAll(deleteMin(h), m :: result)
+  def removeAll(h: Heap, result: List[Int] = Nil): List[Int] =
+    findMin(h) match {
+      case None => result.reverse
+      case Some(m) => {
+        removeAll(deleteMin(h), m :: result)
+      }
     }
-  }
 
   def heapSort(xs: List[Int]): List[Int] = {
     removeAll(insertAll(Empty, xs))

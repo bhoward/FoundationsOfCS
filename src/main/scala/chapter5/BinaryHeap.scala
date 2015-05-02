@@ -75,13 +75,14 @@ object BinaryHeap {
   }
 
   // tail-recursive version
-  def removeAll(h: Heap, result: List[Int] = Nil): List[Int] = h.findMin match {
-    case None => result.reverse
-    case Some(m) => {
-      h.deleteMin()
-      removeAll(h, m :: result)
+  def removeAll(h: Heap, result: List[Int] = Nil): List[Int] =
+    h.findMin match {
+      case None => result.reverse
+      case Some(m) => {
+        h.deleteMin()
+        removeAll(h, m :: result)
+      }
     }
-  }
 
   def heapSort(xs: List[Int]): List[Int] = {
     val h = new Heap
