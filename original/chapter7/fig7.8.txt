@@ -7,12 +7,12 @@ struct CELL {
 };
 
 LIST intersection(LIST L, LIST M);
-LIST assemble(int x, LIST L, LIST M);
+LIST assembleI(int x, LIST L, LIST M);
 
-/* assemble produces a list whose head element is x and
-   whose tail is the union of lists L and M */
+/* assembleI produces a list whose head element is x and
+   whose tail is the intersection of lists L and M */
 
-LIST assemble(int x, LIST L, LIST M)
+LIST assembleI(int x, LIST L, LIST M)
 {
     LIST first;
 
@@ -22,12 +22,14 @@ LIST assemble(int x, LIST L, LIST M)
     return first;
 }
 
+/* intersection returns a list that is the intersection of L and M */
+
 LIST intersection(LIST L, LIST M)
 {
     if (L == NULL || M == NULL)
         return NULL;
     else if (L->element == M->element)
-        return assemble(L->element, L->next, M->next);
+        return assembleI(L->element, L->next, M->next);
     else if (L->element < M->element)
         return intersection(L->next, M);
     else /* here, M->element < L->element */
