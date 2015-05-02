@@ -976,8 +976,69 @@
     )
     
 @sect{Chapter 9: The Graph Data Model}
-  @p
+  @sect{Graph Traversals}
+    @p
+      In Figures 9.27, 9.31, and 9.33, Aho & Ullman give a recursive depth-first search of a graph starting
+      from a given node, as well as the @code{dfsForest} function that produces a forest of dfs trees,
+      restarting the search at unvisited nodes until the entire graph has been visited. The only difference
+      in Figure 9.33 is that nodes are also marked with their (postorder) finishing number.
+    
+    @hl.ref(
+      original/'chapter9/"fig9.33.txt",
+      "#define MAX"
+    )
+    
+    @p
+      Here is a corresponding Scala version, together with the required type definitions. While the
+      Aho & Ullman code just gives a skeleton of how the nodes are visited in the search, this
+      @code{dfs} function will return both the dfs forest and also a value of type @code{DFSResult},
+      indicating either that a cycle was found or, if the graph was acyclic, giving a topological
+      ordering of the nodes.
+      
+    @hl.ref(
+      translated/'chapter9/"GraphTraversals.scala",
+      "type GRAPH",
+      "// iterative"
+    )
+    
+    @p
+      The @code{aux} function takes a set of nodes to be processed; in the initial call, this is the
+      entire set of nodes (so that we end up with the entire dfs forest). On subsequent calls to
+      @code{aux}, it is given all of the neighbors of the just-processed node; the returned forest
+      will be the list of children of that node in the eventual dfs tree. Note that only unvisited
+      nodes will add edges to the tree; the @code{foldLeft} method iterates through the set of nodes
+      and collects up those children which have not yet been visited. Since the graph is immutable,
+      the local set @code{visited} is used to keep track of which nodes have already been seen. A
+      node is added to the @code{finished} list (it is a list, rather than a set, to keep track of
+      the finishing order -- the reverse will be a topological order, if no cycle is found) when all
+      of its children have been visited; @i{i.e.}, at the postorder position. If a neighbor is found
+      that has been visited before, but not yet finished, then that indicates a "back" edge in the
+      graph, and the @code{cycle} flag is set to remember that a cycle was found.
+      
+    @p
+      Just as with the recursive depth-first traversal of trees, we may also perform a graph traversal
+      iteratively by using an explicit stack. This code is complicated by the extra work to extract
+      the dfs forest and the @code{DFSResult} information, but hopefully the similarity to the
+      iterative tree traversal has not been obscured.
 
+    @hl.ref(
+      translated/'chapter9/"GraphTraversals.scala",
+      "def dfsStack",
+      "def bfsQueue"
+    )
+    
+    @p
+      Finally, here is an iterative traversal using a queue instead of a stack. As expected, it
+      performs a breadth-first traversal instead of depth-first. For simplicity, it only returns
+      a list of the nodes in the order in which they were visited (that is, in order by
+      unweighted distance from the start node).
+    
+    @hl.ref(
+      translated/'chapter9/"GraphTraversals.scala",
+      "def bfsQueue",
+      "// TODO"
+    )
+    
 @sect{Chapter 10: Patterns, Automata, and Regular Expressions}
   @p
 
