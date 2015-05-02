@@ -380,7 +380,8 @@
       (which would violate tail recursion). It also uses an auxilliary function, defined within the body of @code{inorder1},
       to actually perform the recursion, because each recursive call will be given a @i{list} of trees to traverse, along
       with the accumulator argument (@code{result}). Passing a list of trees is equivalent to using an explicit stack to
-      keep track of which sub-trees need to be traversed next -- see the discussion of iterative versus recursive graph
+      keep track of which sub-trees need to be traversed next -- see the discussion of iterative versus recursive tree
+      traversals below in @sect.ref{Tree Traversals}, and a corresponding discussion of graph
       traversals in @sect.ref{Chapter 9: The Graph Data Model}. Finally, since it is building up the result in reverse,
       it visits the right child of each node before the node itself, and then does the left child last.
       
@@ -509,7 +510,84 @@
       "sealed trait Heap",
       "def main"
     )
+    
+  @sect{Tree Traversals}
+    @p
+      Various tree traversals were used in the previous examples: preorder and postorder on general trees, inorder
+      on binary search trees, and (implicitly) level-order on binary heaps. Here is a collection of implementations
+      of these traversals on binary trees, in a variety of styles, for comparison. All of them use the following
+      tree type:
+    
+    @hl.ref(
+      translated/'chapter5/"TreeTraversals.scala",
+      "sealed trait Tree",
+      "// Recursive"
+    )
+    
+    @sect{Recursive, Depth-First}
+      @p
+        Here are the three individual variants on depth-first traversal, depending on whether the parent node is
+        visited before, between, or after its children. Each takes a parameter @code{visit: Int => Unit} that
+        performs some action (for its side-effect) for each integer value visited.
+      
+      @hl.ref(
+        translated/'chapter5/"TreeTraversals.scala",
+        "def preorder",
+        "trait TreeVisitor"
+      )
+      
+      @p
+        These traversals may be combined into a single depth-first traversal that takes a visitor object. This
+        visitor has methods to be called for each relevant event: visiting a node in preorder, inorder, or
+        postorder position, and visiting an empty tree.
+        
+      @hl.ref(
+        translated/'chapter5/"TreeTraversals.scala",
+        "trait TreeVisitor",
+        "// Iterative"
+      )
+      
+    @sect{Iterative, Depth-First}
+      @p
+        Instead of using recursion, we may perform depth-first traversals using an explicit stack. Note that
+        tree traversal cannot be done with a loop or tail recursion alone, without using some kind of data
+        structure to keep track of pending branches to be followed.
+        
+      @p
+        The easiest case is preorder, where the stack is used to hold unvisited subtrees. Upon visiting a node,
+        its children are pushed; by pushing the right first and then the left child, the next one popped will be
+        the left and hence the traversal will continue in the usual left-before-right order.
   
+      @hl.ref(
+        translated/'chapter5/"TreeTraversals.scala",
+        "def itPreorder",
+        "sealed trait Event"
+      )
+      
+      @p
+        To handle inorder and postorder traversals, we need to push different kinds of information to the
+        stack. Here is a general solution, that handles all three depth-first traversals (using a
+        @code{TreeVisitor}) by pushing relevant "events" to the stack. The @code{Pre} event is the most
+        complicated, since it represents the first time a node is encountered: in addition to performing
+        the preorder visit, it also loads the stack with the @code{Pre} events for its children,
+        interleaved with the @code{In} and @code{Post} events that will return to itself.
+      
+      @hl.ref(
+        translated/'chapter5/"TreeTraversals.scala",
+        "sealed trait Event",
+        "// Iterative"
+      )
+      
+    @sect{Iterative, Breadth-First}
+      @p
+        By replacing the stack in the iterative preorder traversal with a queue (and reversing the order
+        in which the children are added to the queue), we get the level-order traversal.
+      
+      @hl.ref(
+        translated/'chapter5/"TreeTraversals.scala",
+        "def itLevelorder"
+      )
+      
 @sect{Chapter 6: The List Data Model}
   @sect{Linked Lists}
     @p

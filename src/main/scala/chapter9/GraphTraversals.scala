@@ -97,4 +97,6 @@ object GraphTraversals {
   }
   
   // TODO Dijkstra and Prim, using Priority Queues
+  // TODO Union-find? (Figures 9.19-20)
+  // TODO Floyd/Warshall? (Figure 9.50)
 }
