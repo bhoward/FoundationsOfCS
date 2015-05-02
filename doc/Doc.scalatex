@@ -792,8 +792,111 @@
     )
   
 @sect{Chapter 7: The Set Data Model}
-  @p
+  @sect{List-Based Sets}
+    @p
+      Figures 7.6 and 7.8 of Aho & Ullman show how to use a sorted linked-list as the basis of a set
+      implementation. The union and intersection operations are variations on merging two sorted lists.
+    
+    @hl.ref(
+      original/'chapter7/"fig7.6.txt",
+      "typedef struct CELL",
+      "LIST setUnion"
+    )
+    
+    @hl.ref(
+      original/'chapter7/"fig7.6.txt",
+      "/* assemble"
+    )
+    
+    @hl.ref(
+      original/'chapter7/"fig7.8.txt",
+      "/* assembleI"
+    )
+    
+    @p
+      Here is a Scala translation of the above, using the built-in list type and pattern matching.
+    
+    @hl.ref(
+      translated/'chapter7/"ListSet.scala",
+      "type SET"
+    )
+    
+  @sect{Association Lists}
+    @p
+      In Figure 7.18, Aho & Ullman give an implementation of a function from strings to strings as
+      a list of pairs. They only show insertion, although the @code{lookupBucket} function of
+      Figure 7.22 (see below) is essentially the same as what lookup would be here.
+    
+    @hl.ref(
+      original/'chapter7/"fig7.18.txt",
+      "typedef char"
+    )
+    
+    @p
+      Here is an implementation in Scala of association lists, with lookup, insertion, and deletion.
+      This will be used in the next section to implement hash table buckets. The built-in list and
+      pair types are used, and the type is parameterized on the types of the keys (domain) and
+      values (range).
+    
+    @hl.ref(
+      translated/'chapter7/"AssociationList.scala",
+      "type AList"
+    )
+    
+  @sect{Hash Tables}
+    @p
+      A more performant implementation of a function on string-valued keys is a hash table. Aho &
+      Ullman give part of the code in Figure 7.14, including a simple hash function (first presented
+      in Figure 7.11):
+    
+    @hl.ref(
+      original/'chapter7/"fig7.14.txt",
+      "#define B"
+    )
+    
+    @p
+      The rest of the hash table code is given in Figure 7.22, in a slightly different setting. Where
+      the insertion given above only shows using the hash table as a set (the key is inserted with no
+      associated value), the @code{lookup} function here assumes that each node in the list carries
+      both a key (@code{variety}, of type @code{APPLES}, which is a string) and a value (@code{harvested},
+      of type @code{int}); it returns the value associated with the key, or @code{Unknown} (0) if not
+      found.
+    
+    @hl.ref(
+      original/'chapter7/"fig7.22.txt",
+      "int lookupBucket"
+    )
+    
+    @p
+      Here is a Scala translation of the hash table code, taking advantage of the association lists
+      defined in the previous section. It is parameterized on the value type, @code{Value}.
+    
+    @hl.ref(
+      translated/'chapter7/"HashTable.scala",
+      "val NUMBER_OF_BUCKETS"
+    )
+    
+  @sect{Relations}
+    @p
+      The association list structure can also be used to represent relations. The main differences
+      are that inserting a duplicate key will not replace a previous value for that key (although
+      attempting to insert a duplicate (key, value) pair will be skipped), and when a key is looked
+      up, a list of all corresponding values will be returned. Here is the @code{lookup} function,
+      from Aho & Ullman's Figure 7.24:
 
+    @hl.ref(
+      original/'chapter7/"fig7.24.txt",
+      "typedef char PVARIETY"
+    )
+    
+    @p
+      Here is a Scala translation, also giving appropriate insertion and deletion functions:
+    
+    @hl.ref(
+      translated/'chapter7/"ListRelation.scala",
+      "type REL"
+    )
+    
 @sect{Chapter 9: The Graph Data Model}
   @p
 
