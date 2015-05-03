@@ -1,1053 +1,1054 @@
 @import Main._
-
+  
 @val original = wd/'original
 @val translated = wd/'src/'main/'scala
-
-@sect{Introduction}
-  @p
-    This document surveys the code examples from Alfred V. Aho and Jeffrey D. Ullman,
-    @i{Foundations of Computer Science} (C Edition), W.H. Freeman and Company, 1995.
-    For each figure from the book, it gives a transation into the Scala programming
-    language. Some examples have multiple translations, to demonstrate various styles
-    of code; in particular, a functional programming style is emphasized where possible.
-    
-@sect{Chapter 2: Iteration, Induction, and Recursion}
-  @sect{Selection Sort}
-    @p
-      Here is the iterative selection sort in C from Figure 2.3:
-      
-    @hl.ref(
-      original/'chapter2/"fig2.3.txt",
-      Seq("main", "void SelectionSort")
-    )
-
-    @p
-      Here is a straightforward translation into Scala:
-      
-    @hl.ref(
-      translated/'chapter2/"IterativeSelectionSort.scala",
-      "def selectionSort"
-    )
-        
-    @p
-      Apart from the following minor syntactic differences, these are essentially the same program:
-    @ul
-      @li
-        Scala defines a function with @code{def name(args): type = body} instead of @code{type name(args) body}.
-      @li
-        In a related design choice, Scala declares variable types as @code{name: type} instead of @code{type name}.
-      @li
-        If a variable's type can be inferred from the value being assigned to it, then the type may be omitted
-        (hence @code{var small = i} instead of @code{var small: Int = i}).
-      @li
-        Arrays are not given special treatment in Scala: @code{Array[Int]} is a collection of integers, similar to
-        @code{vector<int>} in C++ or @code{ArrayList<Integer>} in Java. Since the fundamental operation on arrays
-        is looking up the element at an index, Scala treats the array @code{A} as a function from indices to
-        elements: @code{A(i)} is what C/C++/Java use special syntax to render as @code{A[i]}.
-      @li
-        The size of an array in Scala is available (as it is in Java) as the @code{length} attribute, so it doesn't
-        need to be passed in as a separate argument to the function.
-      @li
-        The @code{for} loop in Scala is similar to Java's for-each loop: it iterates through a collection, assigning
-        each successive value to the loop variable and evaluating the body. In the statement
-        @code{for (j <- i + 1 until A.length)}, the collection is the range of integers @code{i + 1}, @code{i + 2},
-        ..., @code{A.length - 1} -- the range @code{a until b} is the common half-open range that includes @code{a}
-        but not @code{b}, so this corresponds to the C++/Java loop @code{for (int j = i + 1; j < A.length; j++)}.
-      @li
-        Older versions of C require that you define all of the local variables at the beginning of a function. As of
-        C99, variables may be declared at the point where they are first used, just as in C++, Java, and Scala.
-      @li
-        The type @code{void} from C/C++/Java is called @code{Unit} in Scala. In each case, it signals that we do not
-        care about the return value from the function (there is only one value of type @code{Unit}, so it carries no
-        information).
-    
-  @sect{Recursive Selection Sort}
-    @p
-      In Figure 2.22, Aho & Ullman give a recursive version of selection sort:
-    
-    @hl.ref(
-      original/'chapter2/"fig2.22.txt"
-    )
-    
-    @p
-      Here is an equivalent version in Scala:
-      
-    @hl.ref(
-      translated/'chapter2/"RecursiveSelectionSort.scala",
-      "def recSelectionSort"
-    )
-    
-    @p
-      The only additional difference here not discussed above is the use of a default argument: calling
-      @code{recSelectionSort(A)} is the same as calling @code{recSelectionSort(A, 0)}. In the C version, the
-      sort needs to be initiated by calling @code{recSS(A, 0, n)}, where @code{n} is the number of elements in
-      @code{A}.
-      
-  @sect{Merge Sort}
-    @p
-      Here is the original C version of a linked-list merge sort from Aho & Ullman, Figure 2.31:
-      
-    @hl.ref(
-      original/'chapter2/"fig2.31.txt",
-      Seq("main", "LIST MergeSort")
-    )
-    
-    @p
-      This makes use of the following definition of a linked-list type:
-      
-    @hl.ref(
-      original/'chapter2/"fig2.31.txt",
-      "typedef",
-      "LIST merge"
-    )
-    
-    @p
-      In Scala, we may duplicate this definition as follows:
-      
-    @hl.ref(
-      translated/'chapter2/"MergeSortMutableList.scala",
-      "class LIST",
-      "val NULL"
-    )
-    
-    @p
-      With this definition, we get the following direct translation of the C code:
-      
-    @hl.ref(
-      translated/'chapter2/"MergeSortMutableList.scala",
-      "def mergeSort",
-      "// Convenience"
-    )
-    
-    @p
-      The only real difference to note here is that the functions are returning interesting values
-      (rather than working only by causing "side-effects"). This is the expected case in Scala, and
-      the body of a function is treated as a single expression producing the returned value -- this
-      is why Scala does not use an explicit @code{return} statement. When a block containing multiple
-      expressions in curly braces is evaluated, the returned value is the value of the last expression.
-    
-  @sect{Merge Sort with Immutable Lists}
-    @p
-      Careful examination of the @code{merge} and @code{split} functions above reveals that they both
-      modify their input list(s). Working with mutable data structures like this can be more difficult,
-      particularly when data might be shared with another part of a program, so the convention when
-      doing a more functional style of programming is to use an "immutable" list type. Scala has such
-      a type built-in: values of type @code{List[T]} are either @code{Nil}, the empty list, or
-      @code{head :: tail}, the "cons" of a head value of type @code{T} onto the front of a tail of
-      type @code{List[T]}. Once a list is "consed" together, the head and tail values may not be changed.
-      
-    @p
-      Here is a version of merge sort on the built-in immutable lists:
-      
-    @hl.ref(
-      translated/'chapter2/"MergeSortImmutableListNaive.scala",
-      "def mergeSort"
-    )
-    
-    @p
-      This code makes use of the built-in @code{splitAt} method to create two new lists, one with elements
-      from the first half of the list and the other with the rest (in fact, because of immutability, it
-      doesn't need to copy the elements out of the second half of the list -- it can just share a
-      reference to the existing data structure from the midpoint on). The @code{merge} function, instead of
-      modifying its input lists, creates a new result list by repeatedly consing the smaller of the two
-      heads of the input lists onto the front of the result of merging the rest of the input.
-      
-    @p
-      This @code{merge} function suffers from a common problem with recursion on lists:
-      when the list gets long (thousands of elements), since the function makes a recursive call for every
-      element in the list it will eventually overflow the function-call stack. Aho & Ullman's original
-      also suffered from this problem, as did the direct translation into Scala. At the expense of
-      somewhat more complicated code, it is possible to solve this by rewriting @code{merge} in what is
-      known as a "tail-recursive" style:
-      
-    @hl.ref(
-      translated/'chapter2/"MergeSortImmutableList.scala",
-      "@tailrec"
-    )
-    
-    @p
-      In tail recursion, the function makes its recursive call as the very last action; the return value
-      of the caller will be whatever is returned by the call, with no further processing. As a result, the
-      caller does not need to be kept on the stack -- in the generated code, instead of a normal function call that
-      pushes a new stack frame, it can instead replace the top stack frame with that of the callee and
-      perform a simple jump to the start of the called function. In the case of a function calling itself,
-      this often generates code that looks much like a loop; no matter how many times the function repeats,
-      the stack will not grow larger. The @code("@tailrec") annotation is not necessary, but it signals the
-      Scala compiler that it should tell us if the function isn't truly tail-recursive.
-    
-    @p
-      Since the @code{merge} function is not allowed to perform any additional processing after the recursive
-      call, not even to cons a value onto the front of the returned list, the result must be collected using
-      an extra argument, known as an "accumulator". The parameter @code{result} is the accumulator here -- it
-      is initially @code{Nil} (the default value when @code{merge} is first called), but on each recursive call
-      it will have the next smallest element added to its head. Note that it accumulates the result in reverse,
-      since it is much more efficient to add elements to the front of an immutable list. Therefore, when a base
-      case is reached (one of the input lists is empty), the result must be reversed and concatenated (@code{:::})
-      onto the front of the other list.
-      
-@sect{Chapter 5: The Tree Data Model}
-  @sect{General Trees}
-    @p
-      Figures 5.15 and 5.18 of Aho & Ullman show the preorder and postorder traversals on a general tree data type,
-      where each node may have zero or more children:
-    
-    @hl.ref(
-      original/'chapter5/"fig5.15.txt",
-      "typedef struct NODE"
-    )
-
-    @hl.ref(
-      original/'chapter5/"fig5.18.txt",
-      "void postorder"
-    )
-
-    @p
-      Here are Scala equivalents, where the built-in list type is used for the children:
-    
-    @hl.ref(
-      translated/'chapter5/"GeneralTree.scala",
-      "case class Tree",
-      "def eval"
-    )
   
+@sect{Examples from Foundations of Computer Science}
+  @sect{Introduction}
     @p
-      Other than using the general @code{for} loop to iterate through the collection of children, these can be seen
-      to be essentially the same.
-    
-    @p
-      One application of these general trees is to represent arithmetic expressions. In Figure 5.19, Aho & Ullman
-      use a variant of the tree type where each node contains both an integer value (used only at the leaves) and
-      a character operator (@code{i} for a leaf, and either @code{+}, @code{-}, @code{*}, or @code{/} at an
-      internal node). Here is the code to evaluate such a tree:
-    
-    @hl.ref(
-      original/'chapter5/"fig5.19.txt",
-      "int eval"
-    )
-  
-    @p
-      Using a string value in each node to contain either the value or the operator, here is corresponding Scala
-      code:
-    
-    @hl.ref(
-      translated/'chapter5/"GeneralTree.scala",
-      "def eval",
-      "def height"
-    )
-  
-    @p
-      Note that this application doesn't really use the generality of a list of children -- in the case of a binary
-      operator, it assumes the node will have exactly two children (accessed as @code{n->leftmostChild} and
-      @code{n->leftmostChild->rightSibling} in the C version, or @code{t.children.head} and @code{t.children.tail.head}
-      in the Scala version).
-    
-    @p
-      Another example that works on arbitrary general trees is finding the height of a tree. Here is the C version,
-      from Figure 5.22:
-    
-    @hl.ref(
-      original/'chapter5/"fig5.22.txt",
-      "void computeHt"
-    )
-  
-    @p
-      And here is corresponding code in Scala, which differs in that it returns the height rather than setting the
-      value (mutation!) of a @code{height} field in each node:
-    
-    @hl.ref(
-      translated/'chapter5/"GeneralTree.scala",
-      "def height"
-    )
-     
-    @p
-      This takes advantage of two methods that come with the @code{List} type in the standard library: @code{max}
-      and @code{map}. Given a non-empty list @code{L} of values with an ordering, @code{L.max} returns the largest
-      value in @code{L}. Given a list @code{L} of type @code{List[A]}, and a function @code{f: A => B}, the
-      operation @code{L map f} produces the list of type @code{List[B]} that results when @code{f} is applied to
-      each element of @code{L}.
-    
-  @sect{Binary Search Trees}
-    @p
-      Here is the C version of binary search tree (BST) lookup, insertion, and deletion, from Figures 5.34, 5.35,
-      and 5.40 of Aho & Ullman:
+      This document surveys the code examples from Alfred V. Aho and Jeffrey D. Ullman,
+      @i{Foundations of Computer Science} (C Edition), W.H. Freeman and Company, 1995.
+      For each figure from the book, it gives a translation into the Scala programming
+      language. Some examples have multiple translations, to demonstrate various styles
+      of code; in particular, a functional programming style is emphasized where possible.
       
-    @hl.ref(
-      original/'chapter5/"fig5.34.txt",
-      "typedef struct NODE"
-    )
-  
-    @hl.ref(
-      original/'chapter5/"fig5.35.txt",
-      "TREE insert"
-    )
-  
-    @hl.ref(
-      original/'chapter5/"fig5.40.txt",
-      "ETYPE deletemin"
-    )
-    
-    @p
-      Here is a Scala translation of the above functions:
-      
-    @hl.ref(
-      translated/'chapter5/"BinarySearchTree.scala",
-      "sealed trait BST",
-      "def height"
-    )
-  
-    @hl.ref(
-      translated/'chapter5/"BinarySearchTree.scala",
-      "def contains",
-      "def findMin"
-    )
-  
-    @hl.ref(
-      translated/'chapter5/"BinarySearchTree.scala",
-      "// naive",
-      "// trampolined"
-    )
-  
-    @hl.ref(
-      translated/'chapter5/"BinarySearchTree.scala",
-      "def findMin",
-      "// naive"
-    )
-    
-    @p
-      There are a few places where the Scala code diverges from the original C version. Trivially, the @code{lookup}
-      function is renamed @code{contains}, for consistency with later examples, and @code{insert} is called
-      @code{insert0}, to distinguish it from a better version discussed below. More significantly, the @code{delete}
-      and @code{deleteMin} functions return a new tree rather than modifying the input tree; this can be done
-      efficiently because only a few nodes will need to be re-created, with most of the original tree being shared
-      (and the only reason this sharing is safe is because the tree is immutable). Since @code{deleteMin} needs to
-      return a tree, the operation of returning the deleted minimum value has been split off into a separate function,
-      @code{findMin}. This function returns an @code{Option[Int]} -- this is a type that either provides a value of the
-      form @code{Some(x)}, which wraps up an actual @code{Int} value @code{x}, or it provides the value @code{None},
-      indicating that there was no result available. In the case of @code{findMin}, if the tree is empty then there is
-      no minimum value; using the option type is a useful alternative to throwing an exception or returning a special
-      value (such as @code{Integer.MAX_VALUE}, or a null reference).
-      
-    @p
-      Another difference is in the insertion function, where the C version ignores duplicates but the Scala version
-      will go ahead and insert them -- this is needed for the application below of binary search trees to sorting, where
-      duplicates need to be preserved. Finally, the Scala tree functions are defined using "pattern matching" -- the
-      two cases by which trees may be constructed, @code{Empty} and @code{Node(l, v, r)}, are mirrored in the cases that
-      each function handles in its @code{match} statement. Here is a simple example of a pattern-matching function
-      defined on trees, to compute the height of a BST. Note the use of the wildcard pattern, @code{_}, to match a
-      value without giving it a name:
-      
-    @hl.ref(
-      translated/'chapter5/"BinarySearchTree.scala",
-      "def height",
-      "def contains"
-    )      
-      
-  @sect{Tree Sort}
-    @p
-      Since a BST maintains its values in sorted order, one way to sort a list of values is to insert them all into a
-      BST and then retrieve them with an inorder traversal:
-      
-    @hl.ref(
-      translated/'chapter5/"BinarySearchTree.scala",
-      "def inorder0",
-      "// tail-recursive"
-    )
-    
-    @hl.ref(
-      translated/'chapter5/"BinarySearchTree.scala",
-      "def insertAll",
-      "def treeSortNaive"
-    )
-    
-    @p
-      (In this code, references to @code{insert} and @code{inorder} may be replaced with either the naive versions,
-      @code{insert0} and @code{inorder0}, or with the better-behaved versions discussed below.)
-    
-  @sect{Avoiding Stack Overflow}
-    @p
-      It was mentioned above that the @code{insert0} function needs improvement. Just as with the @code{merge} function
-      on lists discussed in @sect.ref{Merge Sort with Immutable Lists}, the naive version of tree insertion given by
-      Aho & Ullman will overflow the function call stack if the tree gets too deep. This typically happens when the
-      BST becomes unbalanced, for example when a large sequence of values are inserted in order, so that all of them
-      are inserted along the same path of the tree. The better solution to this is to work to ensure balance, as done
-      in the following section. However, the insertion function may be rewritten in a tail-recursive style that avoids
-      the stack overflow by making use of two additional techniques: continuations and trampolines. Similarly, the
-      inorder traversal function defined above, @code{inorder0}, will also overflow on large, unbalanced trees.
-      
-    @p
-      First, here is a better version of inorder traversal. It uses an accumulator, like the tail-recursive merge function,
-      to collect up the resulting list rather than try to construct the result after each nested function call returns
-      (which would violate tail recursion). It also uses an auxilliary function, defined within the body of @code{inorder1},
-      to actually perform the recursion, because each recursive call will be given a @i{list} of trees to traverse, along
-      with the accumulator argument (@code{result}). Passing a list of trees is equivalent to using an explicit stack to
-      keep track of which sub-trees need to be traversed next -- see the discussion of iterative versus recursive tree
-      traversals below in @sect.ref{Tree Traversals}, and a corresponding discussion of graph
-      traversals in @sect.ref{Chapter 9: The Graph Data Model}. Finally, since it is building up the result in reverse,
-      it visits the right child of each node before the node itself, and then does the left child last.
-      
-    @hl.ref(
-      translated/'chapter5/"BinarySearchTree.scala",
-      "def inorder1",
-      "// choose"
-    )
-      
-    @p
-      A generalization of using an accumulator is to use a "continuation" -- this is a function argument that tells what
-      to do next (@i{i.e.}, how to continue) once a result is produced. Thus, instead of writing, for example,
-      @code{f(x) + y}, the function @code{f} is modified to take an extra parameter, @code{k}, which it will apply to its
-      result instead of returning it. The operation of adding @code{y} to the return value from @code{f} in the example
-      would then turn into the call @code{f(x, result => result + y)}. If all functions are converted into this
-      "continuation-passing style", then every function ends by calling another; since none of these functions returns
-      anything, their stack frames do not need to be kept and the tail-call optimization can prevent overflow. To get a
-      value back, the original call is passed the identity function as a continuation, saying that when the final result
-      is produced, the next thing to do is simply return that value. Here is the insertion function rewritten in
-      continuation-passing style:
-      
-    @hl.ref(
-      translated/'chapter5/"BinarySearchTree.scala",
-      "def insert1a",
-      "// naive"
-    )
-    
-    @p
-      Unfortunately, the JVM is not able to do the tail-call optimization by itself, so @code{insert1a} will also
-      lead to a stack overflow. However, Scala includes a helper class in its standard library that will use a
-      technique called "trampolining" to allow us to perform this optimization. The idea is that instead of making
-      a tail call, each function should return an object describing what it wants to do next: either call another
-      function (@code{tailcall(k(...))}) or end the chain by producing a value (@code{done(x)}). By returning this
-      object, the function's frame is popped from the stack. The object gets returned to the "trampoline", which
-      "bounces" control on to the next function in the case of a @code{tailcall}. Here is the final version of BST
-      insertion, which successfully avoids stack overflow:
-      
-    @hl.ref(
-      translated/'chapter5/"BinarySearchTree.scala",
-      "def insert1",
-      "// non-trampolined"
-    )
-  
-  @sect{Balanced Binary Search Trees}
-    @p
-      Of course, when using binary search trees, the whole point is to keep them at least roughly balanced, to get
-      the logarithmic time guarantees for the basic operations. One simple strategy for doing this is to use an AVL
-      tree, which maintains the invariant that the difference in height between any node's children is no more than
-      one. This self-balancing tree structure was discovered in the early 1960's by Georgy Adelson-Velsky and
-      E. M. Landis. A functional version of an AVL tree is particularly easy to create, because only two additions
-      are needed to the above code: each node will also contain its height, and whenever a new tree node is created,
-      rather than using the @code{Node} constructor directly, we will call the function @code{balance}, which will
-      perform appropriate tree rotations to the subtrees to ensure the AVL balance condition is maintained. See a
-      data structures text, or @a("Wikipedia", href:="http://en.wikipedia.org/wiki/AVL_tree"), for details. Here is
-      the complete code (note that we don't need to worry about tail-recursion here, since the trees will always be
-      shallow):
-      
-    @hl.ref(
-      translated/'chapter5/"AVLBinarySearchTree.scala",
-      "sealed trait BST"
-    )
-  
-  @sect{Binary Heaps}
-    @p
-      Another application of a binary tree is the (binary) heap, where the ordering property goes from top to bottom
-      instead of left to right. That is, in a min-heap, each node's value must be less than or equal to its children's
-      values. Therefore, the minimum value overall must be at the root. A heap provides an efficient implementation
-      of a priority queue, where elements will be dequeued in order, least to greatest (for a min-heap; a max-heap
-      goes greatest to least).
-      
-    @p
-      Aho & Ullman give an implementation of binary heaps, which satisfy both the heap ordering property and the
-      additional balancing property that every level of the tree is full except possibly the last, which must be
-      filled from the left. This balancing property allows an efficient representation of the tree as an array (the
-      contents of the tree in level-order). Here is their C code, from Figure 5.54:
-      
-    @hl.ref(
-      original/'chapter5/"fig5.54.txt",
-      Seq("void swap", "void swap"),
-      "main"
-    )
-  
-    @hl.ref(
-      original/'chapter5/"fig5.54.txt",
-      Seq("main", "void heapsort")
-    )
-    
-    @p
-      Aho & Ullman implemented a max-heap. Here is a direct translation into Scala, except for a min-heap (for
-      consistency with other examples):
-      
-    @hl.ref(
-      translated/'chapter5/"BinaryHeap.scala",
-      "class Heap",
-      "def main"
-    )
-    
-    @p
-      There are two minor differences in this code from the C original:
-    @ul
-      @li
-        The @code{bubbleUp}, @code{bubbleDown}, and @code{swap} methods, as well as the array itself, are
-        encapsulated in a @code{Heap} object. Only the @code{insert}, @code{insertAll} (which replaces the original
-        @code{heapify} -- see below), @code{findMin}, @code{deleteMin}, and @code{clear} methods are exposed.
-      @li
-        Because the array is private to the heap object, the @code{heapify} function isn't used to take an existing
-        array and apply the heap ordering property. Instead, the @code{insertAll} method copies values from a list
-        into the array and then heapifies it. Similarly, the @code{heapsort} function of Aho & Ullman works by
-        mutating the array passed in to it, while the Scala @code{heapSort} function copies from a list into the
-        heap and then extracts a sorted list of values (note the now-familiar use of an accumulator in
-        @code{removeAll} to achieve tail-recursion) to be returned.
-  
-  @sect{Skew Heaps}
-    @p
-      An alternative functional data structure that gives a min-heap is a
-      @a("skew heap", href:="http://en.wikipedia.org/wiki/Skew_heap"). This is an ordinary binary tree
-      satisfying the heap ordering property. Rather than obeying a strict balance condition, skew heaps guarantee
-      only an "amortized" logarithmic time behavior -- although any individual operation might be expensive, the
-      running time of k operations on a heap of size N will be O(k log N). The key to the behavior of the skew heap
-      is the @code{merge} operation, which combines two heaps into one -- it avoids a tendency to become unbalanced
-      by continually swapping left and right children when performing the merge. The other main operations,
-      @code{insert} and @code{deleteMin}, are easily implemented in terms of @code{merge}. Here is the code:
-      
-    @hl.ref(
-      translated/'chapter5/"SkewHeap.scala",
-      "sealed trait Heap",
-      "def main"
-    )
-    
-  @sect{Tree Traversals}
-    @p
-      Various tree traversals were used in the previous examples: preorder and postorder on general trees, inorder
-      on binary search trees, and (implicitly) level-order on binary heaps. Here is a collection of implementations
-      of these traversals on binary trees, in a variety of styles, for comparison. All of them use the following
-      tree type:
-    
-    @hl.ref(
-      translated/'chapter5/"TreeTraversals.scala",
-      "sealed trait Tree",
-      "// Recursive"
-    )
-    
-    @sect{Recursive, Depth-First}
+  @sect{Chapter 2: Iteration, Induction, and Recursion}
+    @sect{Selection Sort}
       @p
-        Here are the three individual variants on depth-first traversal, depending on whether the parent node is
-        visited before, between, or after its children. Each takes a parameter @code{visit: Int => Unit} that
-        performs some action (for its side-effect) for each integer value visited.
-      
-      @hl.ref(
-        translated/'chapter5/"TreeTraversals.scala",
-        "def preorder",
-        "trait TreeVisitor"
-      )
-      
-      @p
-        These traversals may be combined into a single depth-first traversal that takes a visitor object. This
-        visitor has methods to be called for each relevant event: visiting a node in preorder, inorder, or
-        postorder position, and visiting an empty tree.
+        Here is the iterative selection sort in C from Figure 2.3:
         
       @hl.ref(
-        translated/'chapter5/"TreeTraversals.scala",
-        "trait TreeVisitor",
-        "// Iterative"
+        original/'chapter2/"fig2.3.txt",
+        Seq("main", "void SelectionSort")
+      )
+  
+      @p
+        Here is a straightforward translation into Scala:
+        
+      @hl.ref(
+        translated/'chapter2/"IterativeSelectionSort.scala",
+        "def selectionSort"
+      )
+          
+      @p
+        Apart from the following minor syntactic differences, these are essentially the same program:
+      @ul
+        @li
+          Scala defines a function with @code{def name(args): type = body} instead of @code{type name(args) body}.
+        @li
+          In a related design choice, Scala declares variable types as @code{name: type} instead of @code{type name}.
+        @li
+          If a variable's type can be inferred from the value being assigned to it, then the type may be omitted
+          (hence @code{var small = i} instead of @code{var small: Int = i}).
+        @li
+          Arrays are not given special treatment in Scala: @code{Array[Int]} is a collection of integers, similar to
+          @code{vector<int>} in C++ or @code{ArrayList<Integer>} in Java. Since the fundamental operation on arrays
+          is looking up the element at an index, Scala treats the array @code{A} as a function from indices to
+          elements: @code{A(i)} is what C/C++/Java use special syntax to render as @code{A[i]}.
+        @li
+          The size of an array in Scala is available (as it is in Java) as the @code{length} attribute, so it doesn't
+          need to be passed in as a separate argument to the function.
+        @li
+          The @code{for} loop in Scala is similar to Java's for-each loop: it iterates through a collection, assigning
+          each successive value to the loop variable and evaluating the body. In the statement
+          @code{for (j <- i + 1 until A.length)}, the collection is the range of integers @code{i + 1}, @code{i + 2},
+          ..., @code{A.length - 1} -- the range @code{a until b} is the common half-open range that includes @code{a}
+          but not @code{b}, so this corresponds to the C++/Java loop @code{for (int j = i + 1; j < A.length; j++)}.
+        @li
+          Older versions of C require that you define all of the local variables at the beginning of a function. As of
+          C99, variables may be declared at the point where they are first used, just as in C++, Java, and Scala.
+        @li
+          The type @code{void} from C/C++/Java is called @code{Unit} in Scala. In each case, it signals that we do not
+          care about the return value from the function (there is only one value of type @code{Unit}, so it carries no
+          information).
+      
+    @sect{Recursive Selection Sort}
+      @p
+        In Figure 2.22, Aho & Ullman give a recursive version of selection sort:
+      
+      @hl.ref(
+        original/'chapter2/"fig2.22.txt"
       )
       
-    @sect{Iterative, Depth-First}
       @p
-        Instead of using recursion, we may perform depth-first traversals using an explicit stack. Note that
-        tree traversal cannot be done with a loop or tail recursion alone, without using some kind of data
-        structure to keep track of pending branches to be followed.
+        Here is an equivalent version in Scala:
+        
+      @hl.ref(
+        translated/'chapter2/"RecursiveSelectionSort.scala",
+        "def recSelectionSort"
+      )
+      
+      @p
+        The only additional difference here not discussed above is the use of a default argument: calling
+        @code{recSelectionSort(A)} is the same as calling @code{recSelectionSort(A, 0)}. In the C version, the
+        sort needs to be initiated by calling @code{recSS(A, 0, n)}, where @code{n} is the number of elements in
+        @code{A}.
+        
+    @sect{Merge Sort}
+      @p
+        Here is the original C version of a linked-list merge sort from Aho & Ullman, Figure 2.31:
+        
+      @hl.ref(
+        original/'chapter2/"fig2.31.txt",
+        Seq("main", "LIST MergeSort")
+      )
+      
+      @p
+        This makes use of the following definition of a linked-list type:
+        
+      @hl.ref(
+        original/'chapter2/"fig2.31.txt",
+        "typedef",
+        "LIST merge"
+      )
+      
+      @p
+        In Scala, we may duplicate this definition as follows:
+        
+      @hl.ref(
+        translated/'chapter2/"MergeSortMutableList.scala",
+        "class LIST",
+        "val NULL"
+      )
+      
+      @p
+        With this definition, we get the following direct translation of the C code:
+        
+      @hl.ref(
+        translated/'chapter2/"MergeSortMutableList.scala",
+        "def mergeSort",
+        "// Convenience"
+      )
+      
+      @p
+        The only real difference to note here is that the functions are returning interesting values
+        (rather than working only by causing "side-effects"). This is the expected case in Scala, and
+        the body of a function is treated as a single expression producing the returned value -- this
+        is why Scala does not use an explicit @code{return} statement. When a block containing multiple
+        expressions in curly braces is evaluated, the returned value is the value of the last expression.
+      
+    @sect{Merge Sort with Immutable Lists}
+      @p
+        Careful examination of the @code{merge} and @code{split} functions above reveals that they both
+        modify their input list(s). Working with mutable data structures like this can be more difficult,
+        particularly when data might be shared with another part of a program, so the convention when
+        doing a more functional style of programming is to use an "immutable" list type. Scala has such
+        a type built-in: values of type @code{List[T]} are either @code{Nil}, the empty list, or
+        @code{head :: tail}, the "cons" of a head value of type @code{T} onto the front of a tail of
+        type @code{List[T]}. Once a list is "consed" together, the head and tail values may not be changed.
         
       @p
-        The easiest case is preorder, where the stack is used to hold unvisited subtrees. Upon visiting a node,
-        its children are pushed; by pushing the right first and then the left child, the next one popped will be
-        the left and hence the traversal will continue in the usual left-before-right order.
-  
+        Here is a version of merge sort on the built-in immutable lists:
+        
       @hl.ref(
-        translated/'chapter5/"TreeTraversals.scala",
-        "def itPreorder",
-        "sealed trait Event"
+        translated/'chapter2/"MergeSortImmutableListNaive.scala",
+        "def mergeSort"
       )
       
       @p
-        To handle inorder and postorder traversals, we need to push different kinds of information to the
-        stack. Here is a general solution, that handles all three depth-first traversals (using a
-        @code{TreeVisitor}) by pushing relevant "events" to the stack. The @code{Pre} event is the most
-        complicated, since it represents the first time a node is encountered: in addition to performing
-        the preorder visit, it also loads the stack with the @code{Pre} events for its children,
-        interleaved with the @code{In} and @code{Post} events that will return to itself.
-      
-      @hl.ref(
-        translated/'chapter5/"TreeTraversals.scala",
-        "sealed trait Event",
-        "// Iterative"
-      )
-      
-    @sect{Iterative, Breadth-First}
+        This code makes use of the built-in @code{splitAt} method to create two new lists, one with elements
+        from the first half of the list and the other with the rest (in fact, because of immutability, it
+        doesn't need to copy the elements out of the second half of the list -- it can just share a
+        reference to the existing data structure from the midpoint on). The @code{merge} function, instead of
+        modifying its input lists, creates a new result list by repeatedly consing the smaller of the two
+        heads of the input lists onto the front of the result of merging the rest of the input.
+        
       @p
-        By replacing the stack in the iterative preorder traversal with a queue (and reversing the order
-        in which the children are added to the queue), we get the level-order traversal.
+        This @code{merge} function suffers from a common problem with recursion on lists:
+        when the list gets long (thousands of elements), since the function makes a recursive call for every
+        element in the list it will eventually overflow the function-call stack. Aho & Ullman's original
+        also suffered from this problem, as did the direct translation into Scala. At the expense of
+        somewhat more complicated code, it is possible to solve this by rewriting @code{merge} in what is
+        known as a "tail-recursive" style:
+        
+      @hl.ref(
+        translated/'chapter2/"MergeSortImmutableList.scala",
+        "@tailrec"
+      )
+      
+      @p
+        In tail recursion, the function makes its recursive call as the very last action; the return value
+        of the caller will be whatever is returned by the call, with no further processing. As a result, the
+        caller does not need to be kept on the stack -- in the generated code, instead of a normal function call that
+        pushes a new stack frame, it can instead replace the top stack frame with that of the callee and
+        perform a simple jump to the start of the called function. In the case of a function calling itself,
+        this often generates code that looks much like a loop; no matter how many times the function repeats,
+        the stack will not grow larger. The @code("@tailrec") annotation is not necessary, but it signals the
+        Scala compiler that it should tell us if the function isn't truly tail-recursive.
+      
+      @p
+        Since the @code{merge} function is not allowed to perform any additional processing after the recursive
+        call, not even to cons a value onto the front of the returned list, the result must be collected using
+        an extra argument, known as an "accumulator". The parameter @code{result} is the accumulator here -- it
+        is initially @code{Nil} (the default value when @code{merge} is first called), but on each recursive call
+        it will have the next smallest element added to its head. Note that it accumulates the result in reverse,
+        since it is much more efficient to add elements to the front of an immutable list. Therefore, when a base
+        case is reached (one of the input lists is empty), the result must be reversed and concatenated (@code{:::})
+        onto the front of the other list.
+        
+  @sect{Chapter 5: The Tree Data Model}
+    @sect{General Trees}
+      @p
+        Figures 5.15 and 5.18 of Aho & Ullman show the preorder and postorder traversals on a general tree data type,
+        where each node may have zero or more children:
+      
+      @hl.ref(
+        original/'chapter5/"fig5.15.txt",
+        "typedef struct NODE"
+      )
+  
+      @hl.ref(
+        original/'chapter5/"fig5.18.txt",
+        "void postorder"
+      )
+  
+      @p
+        Here are Scala equivalents, where the built-in list type is used for the children:
+      
+      @hl.ref(
+        translated/'chapter5/"GeneralTree.scala",
+        "case class Tree",
+        "def eval"
+      )
+    
+      @p
+        Other than using the general @code{for} loop to iterate through the collection of children, these can be seen
+        to be essentially the same.
+      
+      @p
+        One application of these general trees is to represent arithmetic expressions. In Figure 5.19, Aho & Ullman
+        use a variant of the tree type where each node contains both an integer value (used only at the leaves) and
+        a character operator (@code{i} for a leaf, and either @code{+}, @code{-}, @code{*}, or @code{/} at an
+        internal node). Here is the code to evaluate such a tree:
+      
+      @hl.ref(
+        original/'chapter5/"fig5.19.txt",
+        "int eval"
+      )
+    
+      @p
+        Using a string value in each node to contain either the value or the operator, here is corresponding Scala
+        code:
+      
+      @hl.ref(
+        translated/'chapter5/"GeneralTree.scala",
+        "def eval",
+        "def height"
+      )
+    
+      @p
+        Note that this application doesn't really use the generality of a list of children -- in the case of a binary
+        operator, it assumes the node will have exactly two children (accessed as @code{n->leftmostChild} and
+        @code{n->leftmostChild->rightSibling} in the C version, or @code{t.children.head} and @code{t.children.tail.head}
+        in the Scala version).
+      
+      @p
+        Another example that works on arbitrary general trees is finding the height of a tree. Here is the C version,
+        from Figure 5.22:
+      
+      @hl.ref(
+        original/'chapter5/"fig5.22.txt",
+        "void computeHt"
+      )
+    
+      @p
+        And here is corresponding code in Scala, which differs in that it returns the height rather than setting the
+        value (mutation!) of a @code{height} field in each node:
+      
+      @hl.ref(
+        translated/'chapter5/"GeneralTree.scala",
+        "def height"
+      )
+       
+      @p
+        This takes advantage of two methods that come with the @code{List} type in the standard library: @code{max}
+        and @code{map}. Given a non-empty list @code{L} of values with an ordering, @code{L.max} returns the largest
+        value in @code{L}. Given a list @code{L} of type @code{List[A]}, and a function @code{f: A => B}, the
+        operation @code{L map f} produces the list of type @code{List[B]} that results when @code{f} is applied to
+        each element of @code{L}.
+      
+    @sect{Binary Search Trees}
+      @p
+        Here is the C version of binary search tree (BST) lookup, insertion, and deletion, from Figures 5.34, 5.35,
+        and 5.40 of Aho & Ullman:
+        
+      @hl.ref(
+        original/'chapter5/"fig5.34.txt",
+        "typedef struct NODE"
+      )
+    
+      @hl.ref(
+        original/'chapter5/"fig5.35.txt",
+        "TREE insert"
+      )
+    
+      @hl.ref(
+        original/'chapter5/"fig5.40.txt",
+        "ETYPE deletemin"
+      )
+      
+      @p
+        Here is a Scala translation of the above functions:
+        
+      @hl.ref(
+        translated/'chapter5/"BinarySearchTree.scala",
+        "sealed trait BST",
+        "def height"
+      )
+    
+      @hl.ref(
+        translated/'chapter5/"BinarySearchTree.scala",
+        "def contains",
+        "def findMin"
+      )
+    
+      @hl.ref(
+        translated/'chapter5/"BinarySearchTree.scala",
+        "// naive",
+        "// trampolined"
+      )
+    
+      @hl.ref(
+        translated/'chapter5/"BinarySearchTree.scala",
+        "def findMin",
+        "// naive"
+      )
+      
+      @p
+        There are a few places where the Scala code diverges from the original C version. Trivially, the @code{lookup}
+        function is renamed @code{contains}, for consistency with later examples, and @code{insert} is called
+        @code{insert0}, to distinguish it from a better version discussed below. More significantly, the @code{delete}
+        and @code{deleteMin} functions return a new tree rather than modifying the input tree; this can be done
+        efficiently because only a few nodes will need to be re-created, with most of the original tree being shared
+        (and the only reason this sharing is safe is because the tree is immutable). Since @code{deleteMin} needs to
+        return a tree, the operation of returning the deleted minimum value has been split off into a separate function,
+        @code{findMin}. This function returns an @code{Option[Int]} -- this is a type that either provides a value of the
+        form @code{Some(x)}, which wraps up an actual @code{Int} value @code{x}, or it provides the value @code{None},
+        indicating that there was no result available. In the case of @code{findMin}, if the tree is empty then there is
+        no minimum value; using the option type is a useful alternative to throwing an exception or returning a special
+        value (such as @code{Integer.MAX_VALUE}, or a null reference).
+        
+      @p
+        Another difference is in the insertion function, where the C version ignores duplicates but the Scala version
+        will go ahead and insert them -- this is needed for the application below of binary search trees to sorting, where
+        duplicates need to be preserved. Finally, the Scala tree functions are defined using "pattern matching" -- the
+        two cases by which trees may be constructed, @code{Empty} and @code{Node(l, v, r)}, are mirrored in the cases that
+        each function handles in its @code{match} statement. Here is a simple example of a pattern-matching function
+        defined on trees, to compute the height of a BST. Note the use of the wildcard pattern, @code{_}, to match a
+        value without giving it a name:
+        
+      @hl.ref(
+        translated/'chapter5/"BinarySearchTree.scala",
+        "def height",
+        "def contains"
+      )      
+        
+    @sect{Tree Sort}
+      @p
+        Since a BST maintains its values in sorted order, one way to sort a list of values is to insert them all into a
+        BST and then retrieve them with an inorder traversal:
+        
+      @hl.ref(
+        translated/'chapter5/"BinarySearchTree.scala",
+        "def inorder0",
+        "// tail-recursive"
+      )
+      
+      @hl.ref(
+        translated/'chapter5/"BinarySearchTree.scala",
+        "def insertAll",
+        "def treeSortNaive"
+      )
+      
+      @p
+        (In this code, references to @code{insert} and @code{inorder} may be replaced with either the naive versions,
+        @code{insert0} and @code{inorder0}, or with the better-behaved versions discussed below.)
+      
+    @sect{Avoiding Stack Overflow}
+      @p
+        It was mentioned above that the @code{insert0} function needs improvement. Just as with the @code{merge} function
+        on lists discussed in @sect.ref{Merge Sort with Immutable Lists}, the naive version of tree insertion given by
+        Aho & Ullman will overflow the function call stack if the tree gets too deep. This typically happens when the
+        BST becomes unbalanced, for example when a large sequence of values are inserted in order, so that all of them
+        are inserted along the same path of the tree. The better solution to this is to work to ensure balance, as done
+        in the following section. However, the insertion function may be rewritten in a tail-recursive style that avoids
+        the stack overflow by making use of two additional techniques: continuations and trampolines. Similarly, the
+        inorder traversal function defined above, @code{inorder0}, will also overflow on large, unbalanced trees.
+        
+      @p
+        First, here is a better version of inorder traversal. It uses an accumulator, like the tail-recursive merge function,
+        to collect up the resulting list rather than try to construct the result after each nested function call returns
+        (which would violate tail recursion). It also uses an auxilliary function, defined within the body of @code{inorder1},
+        to actually perform the recursion, because each recursive call will be given a @i{list} of trees to traverse, along
+        with the accumulator argument (@code{result}). Passing a list of trees is equivalent to using an explicit stack to
+        keep track of which sub-trees need to be traversed next -- see the discussion of iterative versus recursive tree
+        traversals below in @sect.ref{Tree Traversals}, and a corresponding discussion of graph
+        traversals in @sect.ref{Chapter 9: The Graph Data Model}. Finally, since it is building up the result in reverse,
+        it visits the right child of each node before the node itself, and then does the left child last.
+        
+      @hl.ref(
+        translated/'chapter5/"BinarySearchTree.scala",
+        "def inorder1",
+        "// choose"
+      )
+        
+      @p
+        A generalization of using an accumulator is to use a "continuation" -- this is a function argument that tells what
+        to do next (@i{i.e.}, how to continue) once a result is produced. Thus, instead of writing, for example,
+        @code{f(x) + y}, the function @code{f} is modified to take an extra parameter, @code{k}, which it will apply to its
+        result instead of returning it. The operation of adding @code{y} to the return value from @code{f} in the example
+        would then turn into the call @code{f(x, result => result + y)}. If all functions are converted into this
+        "continuation-passing style", then every function ends by calling another; since none of these functions returns
+        anything, their stack frames do not need to be kept and the tail-call optimization can prevent overflow. To get a
+        value back, the original call is passed the identity function as a continuation, saying that when the final result
+        is produced, the next thing to do is simply return that value. Here is the insertion function rewritten in
+        continuation-passing style:
+        
+      @hl.ref(
+        translated/'chapter5/"BinarySearchTree.scala",
+        "def insert1a",
+        "// naive"
+      )
+      
+      @p
+        Unfortunately, the JVM is not able to do the tail-call optimization by itself, so @code{insert1a} will also
+        lead to a stack overflow. However, Scala includes a helper class in its standard library that will use a
+        technique called "trampolining" to allow us to perform this optimization. The idea is that instead of making
+        a tail call, each function should return an object describing what it wants to do next: either call another
+        function (@code{tailcall(k(...))}) or end the chain by producing a value (@code{done(x)}). By returning this
+        object, the function's frame is popped from the stack. The object gets returned to the "trampoline", which
+        "bounces" control on to the next function in the case of a @code{tailcall}. Here is the final version of BST
+        insertion, which successfully avoids stack overflow:
+        
+      @hl.ref(
+        translated/'chapter5/"BinarySearchTree.scala",
+        "def insert1",
+        "// non-trampolined"
+      )
+    
+    @sect{Balanced Binary Search Trees}
+      @p
+        Of course, when using binary search trees, the whole point is to keep them at least roughly balanced, to get
+        the logarithmic time guarantees for the basic operations. One simple strategy for doing this is to use an AVL
+        tree, which maintains the invariant that the difference in height between any node's children is no more than
+        one. This self-balancing tree structure was discovered in the early 1960's by Georgy Adelson-Velsky and
+        E. M. Landis. A functional version of an AVL tree is particularly easy to create, because only two additions
+        are needed to the above code: each node will also contain its height, and whenever a new tree node is created,
+        rather than using the @code{Node} constructor directly, we will call the function @code{balance}, which will
+        perform appropriate tree rotations to the subtrees to ensure the AVL balance condition is maintained. See a
+        data structures text, or @a("Wikipedia", href:="http://en.wikipedia.org/wiki/AVL_tree"), for details. Here is
+        the complete code (note that we don't need to worry about tail-recursion here, since the trees will always be
+        shallow):
+        
+      @hl.ref(
+        translated/'chapter5/"AVLBinarySearchTree.scala",
+        "sealed trait BST"
+      )
+    
+    @sect{Binary Heaps}
+      @p
+        Another application of a binary tree is the (binary) heap, where the ordering property goes from top to bottom
+        instead of left to right. That is, in a min-heap, each node's value must be less than or equal to its children's
+        values. Therefore, the minimum value overall must be at the root. A heap provides an efficient implementation
+        of a priority queue, where elements will be dequeued in order, least to greatest (for a min-heap; a max-heap
+        goes greatest to least).
+        
+      @p
+        Aho & Ullman give an implementation of binary heaps, which satisfy both the heap ordering property and the
+        additional balancing property that every level of the tree is full except possibly the last, which must be
+        filled from the left. This balancing property allows an efficient representation of the tree as an array (the
+        contents of the tree in level-order). Here is their C code, from Figure 5.54:
+        
+      @hl.ref(
+        original/'chapter5/"fig5.54.txt",
+        Seq("void swap", "void swap"),
+        "main"
+      )
+    
+      @hl.ref(
+        original/'chapter5/"fig5.54.txt",
+        Seq("main", "void heapsort")
+      )
+      
+      @p
+        Aho & Ullman implemented a max-heap. Here is a direct translation into Scala, except for a min-heap (for
+        consistency with other examples):
+        
+      @hl.ref(
+        translated/'chapter5/"BinaryHeap.scala",
+        "class Heap",
+        "def main"
+      )
+      
+      @p
+        There are two minor differences in this code from the C original:
+      @ul
+        @li
+          The @code{bubbleUp}, @code{bubbleDown}, and @code{swap} methods, as well as the array itself, are
+          encapsulated in a @code{Heap} object. Only the @code{insert}, @code{insertAll} (which replaces the original
+          @code{heapify} -- see below), @code{findMin}, @code{deleteMin}, and @code{clear} methods are exposed.
+        @li
+          Because the array is private to the heap object, the @code{heapify} function isn't used to take an existing
+          array and apply the heap ordering property. Instead, the @code{insertAll} method copies values from a list
+          into the array and then heapifies it. Similarly, the @code{heapsort} function of Aho & Ullman works by
+          mutating the array passed in to it, while the Scala @code{heapSort} function copies from a list into the
+          heap and then extracts a sorted list of values (note the now-familiar use of an accumulator in
+          @code{removeAll} to achieve tail-recursion) to be returned.
+    
+    @sect{Skew Heaps}
+      @p
+        An alternative functional data structure that gives a min-heap is a
+        @a("skew heap", href:="http://en.wikipedia.org/wiki/Skew_heap"). This is an ordinary binary tree
+        satisfying the heap ordering property. Rather than obeying a strict balance condition, skew heaps guarantee
+        only an "amortized" logarithmic time behavior -- although any individual operation might be expensive, the
+        running time of k operations on a heap of size N will be O(k log N). The key to the behavior of the skew heap
+        is the @code{merge} operation, which combines two heaps into one -- it avoids a tendency to become unbalanced
+        by continually swapping left and right children when performing the merge. The other main operations,
+        @code{insert} and @code{deleteMin}, are easily implemented in terms of @code{merge}. Here is the code:
+        
+      @hl.ref(
+        translated/'chapter5/"SkewHeap.scala",
+        "sealed trait Heap",
+        "def main"
+      )
+      
+    @sect{Tree Traversals}
+      @p
+        Various tree traversals were used in the previous examples: preorder and postorder on general trees, inorder
+        on binary search trees, and (implicitly) level-order on binary heaps. Here is a collection of implementations
+        of these traversals on binary trees, in a variety of styles, for comparison. All of them use the following
+        tree type:
       
       @hl.ref(
         translated/'chapter5/"TreeTraversals.scala",
-        "def itLevelorder"
+        "sealed trait Tree",
+        "// Recursive"
       )
       
-@sect{Chapter 6: The List Data Model}
-  @sect{Linked Lists}
-    @p
-      Here is the singly-linked list from Aho & Ullman, Figures 6.3, 6.4, and 6.5. The lookup and delete functions
-      do a linear search through the list nodes.
+      @sect{Recursive, Depth-First}
+        @p
+          Here are the three individual variants on depth-first traversal, depending on whether the parent node is
+          visited before, between, or after its children. Each takes a parameter @code{visit: Int => Unit} that
+          performs some action (for its side-effect) for each integer value visited.
+        
+        @hl.ref(
+          translated/'chapter5/"TreeTraversals.scala",
+          "def preorder",
+          "trait TreeVisitor"
+        )
+        
+        @p
+          These traversals may be combined into a single depth-first traversal that takes a visitor object. This
+          visitor has methods to be called for each relevant event: visiting a node in preorder, inorder, or
+          postorder position, and visiting an empty tree.
+          
+        @hl.ref(
+          translated/'chapter5/"TreeTraversals.scala",
+          "trait TreeVisitor",
+          "// Iterative"
+        )
+        
+      @sect{Iterative, Depth-First}
+        @p
+          Instead of using recursion, we may perform depth-first traversals using an explicit stack. Note that
+          tree traversal cannot be done with a loop or tail recursion alone, without using some kind of data
+          structure to keep track of pending branches to be followed.
+          
+        @p
+          The easiest case is preorder, where the stack is used to hold unvisited subtrees. Upon visiting a node,
+          its children are pushed; by pushing the right first and then the left child, the next one popped will be
+          the left and hence the traversal will continue in the usual left-before-right order.
     
-    @hl.ref(
-      original/'chapter6/"fig6.3.txt",
-      "typedef struct CELL"
-    )
-    
-    @hl.ref(
-      original/'chapter6/"fig6.4.txt",
-      "void delete"
-    )
-    
-    @hl.ref(
-      original/'chapter6/"fig6.5.txt",
-      "void insert"
-    )
-    
-    @p
-      Here is a direct translation of the above into Scala. Since Java and Scala do not have explicit pointers,
-      the insert and delete functions have to return the modified list. That is, instead of calling
-      @code{insert(x, &L)} and allowing the function to change the list @code{L} directly (this is C's version of
-      call-by-reference, without the C++ syntactic sugar of reference parameters), in Java or Scala we must write
-      @code{L = insert(x, L)}. Note that this is different from saying that the Java or Scala versions are
-      immutable -- they will still modify the next pointers within the nodes of the list. Rather, the result needs
-      to be assigned back to @code{L} in case the @i{head} node of the list changed identity.
-    
-    @hl.ref(
-      translated/'chapter6/"LinkedList.scala",
-      "class LIST"
-    )
-  
-    @p
-      For comparison, here is an immutable version, which is essentially the same as the implementation of Scala's
-      built-in list type. Note that it does pattern matching on the two cases of a list: @code{NULL} and @code{CONS}.
-      In this case, once a @code{CONS} cell is created it will never be changed, so upon insertion or deletion any
-      affected nodes must be copied to new cells.
-    
-    @hl.ref(
-      translated/'chapter6/"ImmutableLinkedList.scala",
-      "sealed trait LIST"
-    )
-  
-  @sect{Sorted Linked Lists}
-    @p
-      By doing the extra work of inserting new values in sorted order, the lookup and delete functions may quit early,
-      as soon as they determine that the desired value can't possibly be located past the current point in the list.
-      Aho & Ullman give only the @code{lookup} function, in Figure 6.6, leaving insertion and deletion as exercises.
-    
-    @hl.ref(
-      original/'chapter6/"fig6.6.txt",
-      "typedef struct CELL"
-    )
-    
-    @p
-      Here is the corresponding Scala version, now using the built-in list type.
-    
-    @hl.ref(
-      translated/'chapter6/"SortedList.scala",
-      "type LIST"
-    )
-  
-  @sect{Doubly Linked Lists}
-    @p
-      To enable efficient insertion and deletion in the middle of a linked list, each node may be given a pointer to
-      the previous node as well as to the next node. Here is the C version of deletion, from Figure 6.9 of Aho & Ullman:
-    
-    @hl.ref(
-      original/'chapter6/"fig6.9.txt",
-      "typedef struct CELL"
-    )
-    
-    @p
-      Here is a Scala version of doubly-linked lists, fleshing out the details and providing a range of useful methods.
-      The list always contains at least one node -- the head node, whose next reference points to the start of the list
-      and whose previous reference points to the end of the list (unless the list is empty, in which case both point
-      back to itself). It is a circular list, because the end node's next reference points back to the head, as does the
-      start node's previous reference.
-    
-    @hl.ref(
-      translated/'chapter6/"DoublyLinkedList.scala",
-      "// This"
-    )
+        @hl.ref(
+          translated/'chapter5/"TreeTraversals.scala",
+          "def itPreorder",
+          "sealed trait Event"
+        )
+        
+        @p
+          To handle inorder and postorder traversals, we need to push different kinds of information to the
+          stack. Here is a general solution, that handles all three depth-first traversals (using a
+          @code{TreeVisitor}) by pushing relevant "events" to the stack. The @code{Pre} event is the most
+          complicated, since it represents the first time a node is encountered: in addition to performing
+          the preorder visit, it also loads the stack with the @code{Pre} events for its children,
+          interleaved with the @code{In} and @code{Post} events that will return to itself.
+        
+        @hl.ref(
+          translated/'chapter5/"TreeTraversals.scala",
+          "sealed trait Event",
+          "// Iterative"
+        )
+        
+      @sect{Iterative, Breadth-First}
+        @p
+          By replacing the stack in the iterative preorder traversal with a queue (and reversing the order
+          in which the children are added to the queue), we get the level-order traversal.
+        
+        @hl.ref(
+          translated/'chapter5/"TreeTraversals.scala",
+          "def itLevelorder"
+        )
+        
+  @sect{Chapter 6: The List Data Model}
+    @sect{Linked Lists}
+      @p
+        Here is the singly-linked list from Aho & Ullman, Figures 6.3, 6.4, and 6.5. The lookup and delete functions
+        do a linear search through the list nodes.
       
-  @sect{Array-Based Lists}
-    @p
-      In Figure 6.11, Aho & Ullman show how to use a fixed-size array as a (bounded) list, giving just the lookup
-      function.
-    
-    @hl.ref(
-      original/'chapter6/"fig6.11.txt",
-      "typedef struct"
-    )
-    
-    @p
-      A refinement of the previous example is given in Figure 6.12, which shows that the logic in the lookup loop
-      can be simplified if the desired value is copied as a "sentinel" into the first unused position of the array.
-      This assumes that the length of the list is at most @code{MAX - 1}.
+      @hl.ref(
+        original/'chapter6/"fig6.3.txt",
+        "typedef struct CELL"
+      )
       
-    @hl.ref(
-      original/'chapter6/"fig6.12.txt",
-      "BOOLEAN lookup"
-    )
-    
-    @p
-      Lookup in an array-based list may be significantly sped up by keeping the list in order and using binary search.
-      Unlike lookup on a sorted linked list, which was on average only twice as fast as a brute-force linear search,
-      binary search will take only logarithmic time -- thus, on a list of a million elements, it might only have to
-      look at twenty or so. Here is the code from Figure 6.14:
-    
-    @hl.ref(
-      original/'chapter6/"fig6.14.txt",
-      "BOOLEAN binsearch"
-    )
-    
-    @p
-      Here is an expanded Scala version of the array-based list examples. Instead of a fixed maximum size, this is
-      an adaptive array list that will expand as needed. The private utility method @code{addOneToLength} will
-      always maintain the invariant that the length of the list is less than the size of the allocated array; if
-      the additional element would violate this, then the entire array is copied into a new one of twice the size.
-      This means that an individual insertion at the end of the list might take more than constant time, although
-      the amortized time will still be constant (that is, k successive insertions will take O(k) time).
+      @hl.ref(
+        original/'chapter6/"fig6.4.txt",
+        "void delete"
+      )
       
-    @p
-      Note that sorted insertion cannot take advantage of binary search -- although it could be used to find the
-      correct position to insert at in logarithmic time, the values from that point to the end would still need
-      to be shifted to make room, resulting in a net linear time operation.
+      @hl.ref(
+        original/'chapter6/"fig6.5.txt",
+        "void insert"
+      )
       
-    @p
-      One final note is that Aho & Ullman's binary search contains a subtle bug, in case the array grows very large:
-      the calculation @code{mid = (low + high)/2} might overflow, even though @code{low} and @code{high} are still
-      within the range of legal integers. Rewriting the calculation as @code{mid = low + (high - low)/2} avoids this
-      problem.
-    
-    @hl.ref(
-      translated/'chapter6/"ArrayList.scala",
-      "val INITIAL_SIZE"
-    )
-  
-  @sect{Stacks}
-    @p
-      Figure 6.17 of Aho & Ullman gives an implementation of the stack datatype built on top of an array.
-    
-    @hl.ref(
-      original/'chapter6/"fig6.17.txt",
-      "typedef struct"
-    )
-    
-    @p
-      In Figure 6.18, an alternate implementation of stacks is given that uses a linked list.
-    
-    @hl.ref(
-      original/'chapter6/"fig6.18.txt",
-      "typedef struct"
-    )
-    
-    @p
-      For the translation of stacks to Scala, several implementations will be given. Here is the trait
-      (essentially a Java interface) that all of them extend (it adds a @code{peek} method to look at the
-      top of the stack without removing it; the @code{pop} method returns only a boolean indicating
-      success, since Scala doesn't allow the C version's use of a reference parameter to also return the
-      removed element):
-    
-    @hl.ref(
-      translated/'chapter6/"Stacks.scala",
-      "trait Stack",
-      "class ArrayStack"
-    )
-    
-    @p
-      Here is an array-based implementation, similar to Figure 6.17:
-  
-    @hl.ref(
-      translated/'chapter6/"Stacks.scala",
-      "class ArrayStack",
-      "class ListStack"
-    )
-    
-    @p
-      This is an implementation using the built-in list type, where the head of the list is the top of the stack.
-  
-    @hl.ref(
-      translated/'chapter6/"Stacks.scala",
-      "class ListStack",
-      "class MutableListStack"
-    )
-    
-    @p
-      Here is a list-based implementation akin to Figure 6.18. Since insertion and deletion occur only at the
-      head of the list, the mutability of the list nodes is not used.
-  
-    @hl.ref(
-      translated/'chapter6/"Stacks.scala",
-      "class MutableListStack",
-      "class DoublyLinkedListStack"
-    )
-    
-    @p
-      Finally, here is an implementation of stacks using the doubly-linked list class from above. The Scala
-      feature where imports may be renamed, as in @code("import DoublyLinkedList.{ clear => DLLclear }"), is
-      used to avoid conflict between the stack versions of @code{clear} and @code{isEmpty} and the imported
-      list versions (which are renamed to @code{DLLclear} and @code{DLLisEmpty}). The occasional comments
-      @code{// scalastyle:ignore} mark lines that the @a("Scalastyle", href:="http://www.scalastyle.org/")
-      tool would flag with warnings of potentially incorrect code, to say that yes, we do know what we are doing.
-  
-    @hl.ref(
-      translated/'chapter6/"Stacks.scala",
-      "class DoublyLinkedListStack"
-    )
-  
-  @sect{Queues}
-    @p
-      Figure 6.29 shows a linked-list implementation of a queue datatype.
-    
-    @hl.ref(
-      original/'chapter6/"fig6.29.txt",
-      "typedef struct"
-    )
-    
-    @p
-      Again, several Scala implementations will be given to show a variety of techniques. Here
-      is the common trait they all extend:
-    
-    @hl.ref(
-      translated/'chapter6/"Queues.scala",
-      "trait Queue",
-      "class ArrayQueue"
-    )
-  
-    @p
-      First is an array-based implementation, which gives a bounded queue. For efficiency, elements
-      are never shifted upon insertion or deletion; instead, the queue is circular -- it will wrap around
-      from @code{A(MAX - 1)} to @code{A(0)}. The index @code{front} gives the first element in the queue,
-      and @code{back} gives the next available space after the last element. For simplicity, the queue is
-      never allowed to contain more than @code{MAX - 1} elements, so that when @code{front} equals
-      @code{back}, we know that the queue is empty.
-    
-    @hl.ref(
-      translated/'chapter6/"Queues.scala",
-      "class ArrayQueue",
-      "class ListQueue"
-    )
-  
-    @p
-      Here is a functional queue implementation, using the built-in list type. For efficiency, the queue
-      is maintained as two lists (essentially a pair of stacks): values are always enqueued to the back
-      list, and dequeued from the front list. When the front list is emptied, the back list will be
-      reversed and used as the new front list. This is another amortized constant time situation: when
-      a value is dequeued and the front list is empty, it will take linear time to reverse the back list;
-      however, this can only happen after a corresponding number of constant-time enqueues, so the net
-      time to perform k enqueues and dequeues will be O(k).
-    
-    @hl.ref(
-      translated/'chapter6/"Queues.scala",
-      "class ListQueue",
-      "class MutableListQueue"
-    )
-  
-    @p
-      An alternate linked list implementation is to use mutable list nodes and maintain pointers to both
-      the first and the last nodes in the list. Enqueues can be done efficiently by tacking a new node
-      onto the end of the list, while dequeues can remove from the head.
-    
-    @hl.ref(
-      translated/'chapter6/"Queues.scala",
-      "class MutableListQueue",
-      "class DoublyLinkedListQueue"
-    )
-  
-    @p
-      Finally, here is an implementation using the doubly-linked list class again, very similar to the
-      final implementation of stacks above.
-    
-    @hl.ref(
-      translated/'chapter6/"Queues.scala",
-      "class DoublyLinkedListQueue"
-    )
-  
-@sect{Chapter 7: The Set Data Model}
-  @sect{List-Based Sets}
-    @p
-      Figures 7.6 and 7.8 of Aho & Ullman show how to use a sorted linked-list as the basis of a set
-      implementation. The union and intersection operations are variations on merging two sorted lists.
-    
-    @hl.ref(
-      original/'chapter7/"fig7.6.txt",
-      "typedef struct CELL",
-      "LIST setUnion"
-    )
-    
-    @hl.ref(
-      original/'chapter7/"fig7.6.txt",
-      "/* assemble"
-    )
-    
-    @hl.ref(
-      original/'chapter7/"fig7.8.txt",
-      "/* assembleI"
-    )
-    
-    @p
-      Here is a Scala translation of the above, using the built-in list type and pattern matching.
-    
-    @hl.ref(
-      translated/'chapter7/"ListSet.scala",
-      "type SET"
-    )
-    
-  @sect{Association Lists}
-    @p
-      In Figure 7.18, Aho & Ullman give an implementation of a function from strings to strings as
-      a list of pairs. They only show insertion, although the @code{lookupBucket} function of
-      Figure 7.22 (see below) is essentially the same as what lookup would be here.
-    
-    @hl.ref(
-      original/'chapter7/"fig7.18.txt",
-      "typedef char"
-    )
-    
-    @p
-      Here is an implementation in Scala of association lists, with lookup, insertion, and deletion.
-      This will be used in the next section to implement hash table buckets. The built-in list and
-      pair types are used, and the type is parameterized on the types of the keys (domain) and
-      values (range).
-    
-    @hl.ref(
-      translated/'chapter7/"AssociationList.scala",
-      "type AList"
-    )
-    
-  @sect{Hash Tables}
-    @p
-      A more performant implementation of a function on string-valued keys is a hash table. Aho &
-      Ullman give part of the code in Figure 7.14, including a simple hash function (first presented
-      in Figure 7.11):
-    
-    @hl.ref(
-      original/'chapter7/"fig7.14.txt",
-      "#define B"
-    )
-    
-    @p
-      The rest of the hash table code is given in Figure 7.22, in a slightly different setting. Where
-      the insertion given above only shows using the hash table as a set (the key is inserted with no
-      associated value), the @code{lookup} function here assumes that each node in the list carries
-      both a key (@code{variety}, of type @code{APPLES}, which is a string) and a value (@code{harvested},
-      of type @code{int}); it returns the value associated with the key, or @code{Unknown} (0) if not
-      found.
-    
-    @hl.ref(
-      original/'chapter7/"fig7.22.txt",
-      "int lookupBucket"
-    )
-    
-    @p
-      Here is a Scala translation of the hash table code, taking advantage of the association lists
-      defined in the previous section. It is parameterized on the value type, @code{Value}.
-    
-    @hl.ref(
-      translated/'chapter7/"HashTable.scala",
-      "val NUMBER_OF_BUCKETS"
-    )
-    
-  @sect{Relations}
-    @p
-      The association list structure can also be used to represent relations. The main differences
-      are that inserting a duplicate key will not replace a previous value for that key (although
-      attempting to insert a duplicate (key, value) pair will be skipped), and when a key is looked
-      up, a list of all corresponding values will be returned. Here is the @code{lookup} function,
-      from Aho & Ullman's Figure 7.24:
-
-    @hl.ref(
-      original/'chapter7/"fig7.24.txt",
-      "typedef char PVARIETY"
-    )
-    
-    @p
-      Here is a Scala translation, also giving appropriate insertion and deletion functions:
-    
-    @hl.ref(
-      translated/'chapter7/"ListRelation.scala",
-      "type REL"
-    )
-    
-@sect{Chapter 9: The Graph Data Model}
-  @sect{Graph Traversals}
-    @p
-      In Figures 9.27, 9.31, and 9.33, Aho & Ullman give a recursive depth-first search of a graph starting
-      from a given node, as well as the @code{dfsForest} function that produces a forest of dfs trees,
-      restarting the search at unvisited nodes until the entire graph has been visited. The only difference
-      in Figure 9.33 is that nodes are also marked with their (postorder) finishing number.
-    
-    @hl.ref(
-      original/'chapter9/"fig9.33.txt",
-      "#define MAX"
-    )
-    
-    @p
-      Here is a corresponding Scala version, together with the required type definitions. While the
-      Aho & Ullman code just gives a skeleton of how the nodes are visited in the search, this
-      @code{dfs} function will return both the dfs forest and also a value of type @code{DFSResult},
-      indicating either that a cycle was found or, if the graph was acyclic, giving a topological
-      ordering of the nodes.
+      @p
+        Here is a direct translation of the above into Scala. Since Java and Scala do not have explicit pointers,
+        the insert and delete functions have to return the modified list. That is, instead of calling
+        @code{insert(x, &L)} and allowing the function to change the list @code{L} directly (this is C's version of
+        call-by-reference, without the C++ syntactic sugar of reference parameters), in Java or Scala we must write
+        @code{L = insert(x, L)}. Note that this is different from saying that the Java or Scala versions are
+        immutable -- they will still modify the next pointers within the nodes of the list. Rather, the result needs
+        to be assigned back to @code{L} in case the @i{head} node of the list changed identity.
       
-    @hl.ref(
-      translated/'chapter9/"GraphTraversals.scala",
-      "type GRAPH",
-      "// iterative"
-    )
+      @hl.ref(
+        translated/'chapter6/"LinkedList.scala",
+        "class LIST"
+      )
     
-    @p
-      The @code{aux} function takes a set of nodes to be processed; in the initial call, this is the
-      entire set of nodes (so that we end up with the entire dfs forest). On subsequent calls to
-      @code{aux}, it is given all of the neighbors of the just-processed node; the returned forest
-      will be the list of children of that node in the eventual dfs tree. Note that only unvisited
-      nodes will add edges to the tree; the @code{foldLeft} method iterates through the set of nodes
-      and collects up those children which have not yet been visited. Since the graph is immutable,
-      the local set @code{visited} is used to keep track of which nodes have already been seen. A
-      node is added to the @code{finished} list (it is a list, rather than a set, to keep track of
-      the finishing order -- the reverse will be a topological order, if no cycle is found) when all
-      of its children have been visited; @i{i.e.}, at the postorder position. If a neighbor is found
-      that has been visited before, but not yet finished, then that indicates a "back" edge in the
-      graph, and the @code{cycle} flag is set to remember that a cycle was found.
+      @p
+        For comparison, here is an immutable version, which is essentially the same as the implementation of Scala's
+        built-in list type. Note that it does pattern matching on the two cases of a list: @code{NULL} and @code{CONS}.
+        In this case, once a @code{CONS} cell is created it will never be changed, so upon insertion or deletion any
+        affected nodes must be copied to new cells.
       
+      @hl.ref(
+        translated/'chapter6/"ImmutableLinkedList.scala",
+        "sealed trait LIST"
+      )
+    
+    @sect{Sorted Linked Lists}
+      @p
+        By doing the extra work of inserting new values in sorted order, the lookup and delete functions may quit early,
+        as soon as they determine that the desired value can't possibly be located past the current point in the list.
+        Aho & Ullman give only the @code{lookup} function, in Figure 6.6, leaving insertion and deletion as exercises.
+      
+      @hl.ref(
+        original/'chapter6/"fig6.6.txt",
+        "typedef struct CELL"
+      )
+      
+      @p
+        Here is the corresponding Scala version, now using the built-in list type.
+      
+      @hl.ref(
+        translated/'chapter6/"SortedList.scala",
+        "type LIST"
+      )
+    
+    @sect{Doubly Linked Lists}
+      @p
+        To enable efficient insertion and deletion in the middle of a linked list, each node may be given a pointer to
+        the previous node as well as to the next node. Here is the C version of deletion, from Figure 6.9 of Aho & Ullman:
+      
+      @hl.ref(
+        original/'chapter6/"fig6.9.txt",
+        "typedef struct CELL"
+      )
+      
+      @p
+        Here is a Scala version of doubly-linked lists, fleshing out the details and providing a range of useful methods.
+        The list always contains at least one node -- the head node, whose next reference points to the start of the list
+        and whose previous reference points to the end of the list (unless the list is empty, in which case both point
+        back to itself). It is a circular list, because the end node's next reference points back to the head, as does the
+        start node's previous reference.
+      
+      @hl.ref(
+        translated/'chapter6/"DoublyLinkedList.scala",
+        "// This"
+      )
+        
+    @sect{Array-Based Lists}
+      @p
+        In Figure 6.11, Aho & Ullman show how to use a fixed-size array as a (bounded) list, giving just the lookup
+        function.
+      
+      @hl.ref(
+        original/'chapter6/"fig6.11.txt",
+        "typedef struct"
+      )
+      
+      @p
+        A refinement of the previous example is given in Figure 6.12, which shows that the logic in the lookup loop
+        can be simplified if the desired value is copied as a "sentinel" into the first unused position of the array.
+        This assumes that the length of the list is at most @code{MAX - 1}.
+        
+      @hl.ref(
+        original/'chapter6/"fig6.12.txt",
+        "BOOLEAN lookup"
+      )
+      
+      @p
+        Lookup in an array-based list may be significantly sped up by keeping the list in order and using binary search.
+        Unlike lookup on a sorted linked list, which was on average only twice as fast as a brute-force linear search,
+        binary search will take only logarithmic time -- thus, on a list of a million elements, it might only have to
+        look at twenty or so. Here is the code from Figure 6.14:
+      
+      @hl.ref(
+        original/'chapter6/"fig6.14.txt",
+        "BOOLEAN binsearch"
+      )
+      
+      @p
+        Here is an expanded Scala version of the array-based list examples. Instead of a fixed maximum size, this is
+        an adaptive array list that will expand as needed. The private utility method @code{addOneToLength} will
+        always maintain the invariant that the length of the list is less than the size of the allocated array; if
+        the additional element would violate this, then the entire array is copied into a new one of twice the size.
+        This means that an individual insertion at the end of the list might take more than constant time, although
+        the amortized time will still be constant (that is, k successive insertions will take O(k) time).
+        
+      @p
+        Note that sorted insertion cannot take advantage of binary search -- although it could be used to find the
+        correct position to insert at in logarithmic time, the values from that point to the end would still need
+        to be shifted to make room, resulting in a net linear time operation.
+        
+      @p
+        One final note is that Aho & Ullman's binary search contains a subtle bug, in case the array grows very large:
+        the calculation @code{mid = (low + high)/2} might overflow, even though @code{low} and @code{high} are still
+        within the range of legal integers. Rewriting the calculation as @code{mid = low + (high - low)/2} avoids this
+        problem.
+      
+      @hl.ref(
+        translated/'chapter6/"ArrayList.scala",
+        "val INITIAL_SIZE"
+      )
+    
+    @sect{Stacks}
+      @p
+        Figure 6.17 of Aho & Ullman gives an implementation of the stack datatype built on top of an array.
+      
+      @hl.ref(
+        original/'chapter6/"fig6.17.txt",
+        "typedef struct"
+      )
+      
+      @p
+        In Figure 6.18, an alternate implementation of stacks is given that uses a linked list.
+      
+      @hl.ref(
+        original/'chapter6/"fig6.18.txt",
+        "typedef struct"
+      )
+      
+      @p
+        For the translation of stacks to Scala, several implementations will be given. Here is the trait
+        (essentially a Java interface) that all of them extend (it adds a @code{peek} method to look at the
+        top of the stack without removing it; the @code{pop} method returns only a boolean indicating
+        success, since Scala doesn't allow the C version's use of a reference parameter to also return the
+        removed element):
+      
+      @hl.ref(
+        translated/'chapter6/"Stacks.scala",
+        "trait Stack",
+        "class ArrayStack"
+      )
+      
+      @p
+        Here is an array-based implementation, similar to Figure 6.17:
+    
+      @hl.ref(
+        translated/'chapter6/"Stacks.scala",
+        "class ArrayStack",
+        "class ListStack"
+      )
+      
+      @p
+        This is an implementation using the built-in list type, where the head of the list is the top of the stack.
+    
+      @hl.ref(
+        translated/'chapter6/"Stacks.scala",
+        "class ListStack",
+        "class MutableListStack"
+      )
+      
+      @p
+        Here is a list-based implementation akin to Figure 6.18. Since insertion and deletion occur only at the
+        head of the list, the mutability of the list nodes is not used.
+    
+      @hl.ref(
+        translated/'chapter6/"Stacks.scala",
+        "class MutableListStack",
+        "class DoublyLinkedListStack"
+      )
+      
+      @p
+        Finally, here is an implementation of stacks using the doubly-linked list class from above. The Scala
+        feature where imports may be renamed, as in @code("import DoublyLinkedList.{ clear => DLLclear }"), is
+        used to avoid conflict between the stack versions of @code{clear} and @code{isEmpty} and the imported
+        list versions (which are renamed to @code{DLLclear} and @code{DLLisEmpty}). The occasional comments
+        @code{// scalastyle:ignore} mark lines that the @a("Scalastyle", href:="http://www.scalastyle.org/")
+        tool would flag with warnings of potentially incorrect code, to say that yes, we do know what we are doing.
+    
+      @hl.ref(
+        translated/'chapter6/"Stacks.scala",
+        "class DoublyLinkedListStack"
+      )
+    
+    @sect{Queues}
+      @p
+        Figure 6.29 shows a linked-list implementation of a queue datatype.
+      
+      @hl.ref(
+        original/'chapter6/"fig6.29.txt",
+        "typedef struct"
+      )
+      
+      @p
+        Again, several Scala implementations will be given to show a variety of techniques. Here
+        is the common trait they all extend:
+      
+      @hl.ref(
+        translated/'chapter6/"Queues.scala",
+        "trait Queue",
+        "class ArrayQueue"
+      )
+    
+      @p
+        First is an array-based implementation, which gives a bounded queue. For efficiency, elements
+        are never shifted upon insertion or deletion; instead, the queue is circular -- it will wrap around
+        from @code{A(MAX - 1)} to @code{A(0)}. The index @code{front} gives the first element in the queue,
+        and @code{back} gives the next available space after the last element. For simplicity, the queue is
+        never allowed to contain more than @code{MAX - 1} elements, so that when @code{front} equals
+        @code{back}, we know that the queue is empty.
+      
+      @hl.ref(
+        translated/'chapter6/"Queues.scala",
+        "class ArrayQueue",
+        "class ListQueue"
+      )
+    
+      @p
+        Here is a functional queue implementation, using the built-in list type. For efficiency, the queue
+        is maintained as two lists (essentially a pair of stacks): values are always enqueued to the back
+        list, and dequeued from the front list. When the front list is emptied, the back list will be
+        reversed and used as the new front list. This is another amortized constant time situation: when
+        a value is dequeued and the front list is empty, it will take linear time to reverse the back list;
+        however, this can only happen after a corresponding number of constant-time enqueues, so the net
+        time to perform k enqueues and dequeues will be O(k).
+      
+      @hl.ref(
+        translated/'chapter6/"Queues.scala",
+        "class ListQueue",
+        "class MutableListQueue"
+      )
+    
+      @p
+        An alternate linked list implementation is to use mutable list nodes and maintain pointers to both
+        the first and the last nodes in the list. Enqueues can be done efficiently by tacking a new node
+        onto the end of the list, while dequeues can remove from the head.
+      
+      @hl.ref(
+        translated/'chapter6/"Queues.scala",
+        "class MutableListQueue",
+        "class DoublyLinkedListQueue"
+      )
+    
+      @p
+        Finally, here is an implementation using the doubly-linked list class again, very similar to the
+        final implementation of stacks above.
+      
+      @hl.ref(
+        translated/'chapter6/"Queues.scala",
+        "class DoublyLinkedListQueue"
+      )
+    
+  @sect{Chapter 7: The Set Data Model}
+    @sect{List-Based Sets}
+      @p
+        Figures 7.6 and 7.8 of Aho & Ullman show how to use a sorted linked-list as the basis of a set
+        implementation. The union and intersection operations are variations on merging two sorted lists.
+      
+      @hl.ref(
+        original/'chapter7/"fig7.6.txt",
+        "typedef struct CELL",
+        "LIST setUnion"
+      )
+      
+      @hl.ref(
+        original/'chapter7/"fig7.6.txt",
+        "/* assemble"
+      )
+      
+      @hl.ref(
+        original/'chapter7/"fig7.8.txt",
+        "/* assembleI"
+      )
+      
+      @p
+        Here is a Scala translation of the above, using the built-in list type and pattern matching.
+      
+      @hl.ref(
+        translated/'chapter7/"ListSet.scala",
+        "type SET"
+      )
+      
+    @sect{Association Lists}
+      @p
+        In Figure 7.18, Aho & Ullman give an implementation of a function from strings to strings as
+        a list of pairs. They only show insertion, although the @code{lookupBucket} function of
+        Figure 7.22 (see below) is essentially the same as what lookup would be here.
+      
+      @hl.ref(
+        original/'chapter7/"fig7.18.txt",
+        "typedef char"
+      )
+      
+      @p
+        Here is an implementation in Scala of association lists, with lookup, insertion, and deletion.
+        This will be used in the next section to implement hash table buckets. The built-in list and
+        pair types are used, and the type is parameterized on the types of the keys (domain) and
+        values (range).
+      
+      @hl.ref(
+        translated/'chapter7/"AssociationList.scala",
+        "type AList"
+      )
+      
+    @sect{Hash Tables}
+      @p
+        A more performant implementation of a function on string-valued keys is a hash table. Aho &
+        Ullman give part of the code in Figure 7.14, including a simple hash function (first presented
+        in Figure 7.11):
+      
+      @hl.ref(
+        original/'chapter7/"fig7.14.txt",
+        "#define B"
+      )
+      
+      @p
+        The rest of the hash table code is given in Figure 7.22, in a slightly different setting. Where
+        the insertion given above only shows using the hash table as a set (the key is inserted with no
+        associated value), the @code{lookup} function here assumes that each node in the list carries
+        both a key (@code{variety}, of type @code{APPLES}, which is a string) and a value (@code{harvested},
+        of type @code{int}); it returns the value associated with the key, or @code{Unknown} (0) if not
+        found.
+      
+      @hl.ref(
+        original/'chapter7/"fig7.22.txt",
+        "int lookupBucket"
+      )
+      
+      @p
+        Here is a Scala translation of the hash table code, taking advantage of the association lists
+        defined in the previous section. It is parameterized on the value type, @code{Value}.
+      
+      @hl.ref(
+        translated/'chapter7/"HashTable.scala",
+        "val NUMBER_OF_BUCKETS"
+      )
+      
+    @sect{Relations}
+      @p
+        The association list structure can also be used to represent relations. The main differences
+        are that inserting a duplicate key will not replace a previous value for that key (although
+        attempting to insert a duplicate (key, value) pair will be skipped), and when a key is looked
+        up, a list of all corresponding values will be returned. Here is the @code{lookup} function,
+        from Aho & Ullman's Figure 7.24:
+  
+      @hl.ref(
+        original/'chapter7/"fig7.24.txt",
+        "typedef char PVARIETY"
+      )
+      
+      @p
+        Here is a Scala translation, also giving appropriate insertion and deletion functions:
+      
+      @hl.ref(
+        translated/'chapter7/"ListRelation.scala",
+        "type REL"
+      )
+      
+  @sect{Chapter 9: The Graph Data Model}
+    @sect{Graph Traversals}
+      @p
+        In Figures 9.27, 9.31, and 9.33, Aho & Ullman give a recursive depth-first search of a graph starting
+        from a given node, as well as the @code{dfsForest} function that produces a forest of dfs trees,
+        restarting the search at unvisited nodes until the entire graph has been visited. The only difference
+        in Figure 9.33 is that nodes are also marked with their (postorder) finishing number.
+      
+      @hl.ref(
+        original/'chapter9/"fig9.33.txt",
+        "#define MAX"
+      )
+      
+      @p
+        Here is a corresponding Scala version, together with the required type definitions. While the
+        Aho & Ullman code just gives a skeleton of how the nodes are visited in the search, this
+        @code{dfs} function will return both the dfs forest and also a value of type @code{DFSResult},
+        indicating either that a cycle was found or, if the graph was acyclic, giving a topological
+        ordering of the nodes.
+        
+      @hl.ref(
+        translated/'chapter9/"GraphTraversals.scala",
+        "type GRAPH",
+        "// iterative"
+      )
+      
+      @p
+        The @code{aux} function takes a set of nodes to be processed; in the initial call, this is the
+        entire set of nodes (so that we end up with the entire dfs forest). On subsequent calls to
+        @code{aux}, it is given all of the neighbors of the just-processed node; the returned forest
+        will be the list of children of that node in the eventual dfs tree. Note that only unvisited
+        nodes will add edges to the tree; the @code{foldLeft} method iterates through the set of nodes
+        and collects up those children which have not yet been visited. Since the graph is immutable,
+        the local set @code{visited} is used to keep track of which nodes have already been seen. A
+        node is added to the @code{finished} list (it is a list, rather than a set, to keep track of
+        the finishing order -- the reverse will be a topological order, if no cycle is found) when all
+        of its children have been visited; @i{i.e.}, at the postorder position. If a neighbor is found
+        that has been visited before, but not yet finished, then that indicates a "back" edge in the
+        graph, and the @code{cycle} flag is set to remember that a cycle was found.
+        
+      @p
+        Just as with the recursive depth-first traversal of trees, we may also perform a graph traversal
+        iteratively by using an explicit stack. This code is complicated by the extra work to extract
+        the dfs forest and the @code{DFSResult} information, but hopefully the similarity to the
+        iterative tree traversal has not been obscured.
+  
+      @hl.ref(
+        translated/'chapter9/"GraphTraversals.scala",
+        "def dfsStack",
+        "def bfsQueue"
+      )
+      
+      @p
+        Finally, here is an iterative traversal using a queue instead of a stack. As expected, it
+        performs a breadth-first traversal instead of depth-first. For simplicity, it only returns
+        a list of the nodes in the order in which they were visited (that is, in order by
+        unweighted distance from the start node).
+      
+      @hl.ref(
+        translated/'chapter9/"GraphTraversals.scala",
+        "def bfsQueue",
+        "// TODO"
+      )
+      
+  @sect{Chapter 10: Patterns, Automata, and Regular Expressions}
     @p
-      Just as with the recursive depth-first traversal of trees, we may also perform a graph traversal
-      iteratively by using an explicit stack. This code is complicated by the extra work to extract
-      the dfs forest and the @code{DFSResult} information, but hopefully the similarity to the
-      iterative tree traversal has not been obscured.
-
-    @hl.ref(
-      translated/'chapter9/"GraphTraversals.scala",
-      "def dfsStack",
-      "def bfsQueue"
-    )
-    
+  
+  @sect{Chapter 11: Recursive Description of Patterns}
     @p
-      Finally, here is an iterative traversal using a queue instead of a stack. As expected, it
-      performs a breadth-first traversal instead of depth-first. For simplicity, it only returns
-      a list of the nodes in the order in which they were visited (that is, in order by
-      unweighted distance from the start node).
-    
-    @hl.ref(
-      translated/'chapter9/"GraphTraversals.scala",
-      "def bfsQueue",
-      "// TODO"
-    )
-    
-@sect{Chapter 10: Patterns, Automata, and Regular Expressions}
-  @p
-
-@sect{Chapter 11: Recursive Description of Patterns}
-  @p
-
-
-    
-    
-    
-    
-    
+  
+  
+      
+      
+      
+      
+      
