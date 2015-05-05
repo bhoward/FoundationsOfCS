@@ -1042,7 +1042,142 @@
       
   @sect{Chapter 10: Patterns, Automata, and Regular Expressions}
     @p
-  
+      There are many ways to implement the state machine concept in code. The essence is that
+      the input is processed one item at a time, in order, with only a fixed amount of
+      information (the "state") preserved from one item to the next. The iteration over the
+      items may be performed by a loop or recursion; the state may be maintained explicitly
+      in variables or hidden in an object, or it may be implicit in the current section of
+      code being executed; the transition from one state to the next may be controlled by a
+      series of conditional statements, a data structure representing the transition graph,
+      or a function which encapsulates the required logic. Here are some examples:
+
+    @sect{Strings containing "aeiou"}
+      @p
+        This is the example from Section 10.2 of the text. A string of lower-case letters
+        will be accepted if it contains the vowels 'a', 'e', 'i', 'o', and 'u', in that order
+        (the vowels may occur in other positions as well, as in "sacrilegious", but there must
+        be an 'e' after an 'a', and an 'i' after that 'e', @i{etc}.).
+
+      @sect{Implicit State}
+        @p
+          First, here is the C version from Aho & Ullman, Figure 10.2:
+        
+        @hl.ref(
+          original/'chapter10/"fig10.2.txt",
+          "BOOLEAN findChar",
+          "main"
+        )
+      
+        @p
+          Here is a direct Scala translation of this code:
+        
+        @hl.ref(
+          translated/'chapter10/"ImplicitState.scala",
+          "def testWord"
+        )
+
+        @p
+          The input is processed in this example by the @code{while} loop in the @code{findChar}
+          function; the variable @code{index} is used to step through the characters in the word.
+          The current "state" is reflected in how far the execution has progressed through
+          the nested @code{if} statements in @code{testWord}; after reading characters for a while in
+          state 0, it transitions to state 1 when the first 'a' is seen, then to state 2 upon
+          seeing a following 'e', etc. If any of the calls to @code{findChar} return false, meaning
+          the end of the string has been reached while looking for one of the vowels, then the
+          machine enters an error state. If all of the calls to @code{findChar} succeed, then the
+          machine reaches state 5 and immediately returns true (without looking at the rest
+          of the string).
+
+      @sect{Integer state with transitions in a graph}
+        @p
+          Here is the same state machine, with the state explicitly represented by an integer
+          in the range 0 to 5. The transitions are stored in an array of maps: @code{trans(i)} is the
+          map, for state @code{i}, from the current character to the next state. Each of the maps in
+          this case is particularly simple, since at most one edge leads away from each state
+          to another; Scala allows a map to have a "default value", so that any transition not
+          explicitly specified will go to that default state (here, remaining in the same
+          state). See below for other examples using more complicated graphs.
+        
+        @hl.ref(
+          translated/'chapter10/"IntegerState.scala",
+          "val trans"
+        )
+
+      @sect{Object-oriented state and transitions}
+        @p
+          Instead of assigning arbitrary numbers to the states, and collecting all of the
+          transition information into a global graph data structure, a more object-oriented
+          approach associates an object with each state:
+
+        @hl.ref(
+          translated/'chapter10/"OOState.scala",
+          "def testWord"
+        )
+
+    @sect{Vending Machine}
+      @p
+        Suppose we want to model a vending machine which accepts nickels, dimes, and quarters,
+        and dispenses a piece of candy when 25 cents has been deposited. If more than 25 cents
+        is put in (for example, three dimes), then after dispensing the candy the remaining
+        amount is applied toward the next transaction (that is, it doesn't give any change).
+
+      @sect{Integer state with transitions in a graph}
+        @p
+          We will adopt a similar solution as for the second version of the vowel problem. This
+          time, the integer state numbers will be more meaningful: they will be 0, 5, 10, 15,
+          and 20, representing the amount of money which has been deposited so far. Since these
+          are not consecutive, the graph will be represented by a map of maps instead of an
+          array of maps. Also, there will be no need for default transitions, since each of the
+          three possible inputs ('N', 'D', or 'Q', for nickel, dime, and quarter) will cause a
+          different change of state. One further difference is that each edge in the graph will
+          give not only a new state but also an indication of whether candy was given out on
+          the transition. Finally, there is no accepting state, since the machine will keep
+          running as long as there is input; in the example below, we will print "Candy!"
+          whenever it produces a piece of candy.
+          
+        @hl.ref(
+          translated/'chapter10/"IntegerStateVending.scala",
+          "val vtrans"
+        )
+
+      @sect{Object-oriented approach with encapsulated state}
+        @p
+          Instead of exposing an explicit state, we can wrap it up inside an object with
+          (mutable) internal state. Here is another approach to the vending machine, which also
+          replaces the discrete transition graph with a calculated transition function.
+
+        @hl.ref(
+          translated/'chapter10/"OOStateVending.scala",
+          "class VendingMachine"
+        )
+
+    @sect{Bounce Filter}
+      @p
+        For one more example, here is the code from Figure 10.7 of Aho & Ullman that implements a
+        "bounce filter": the input is a sequence of 0s and 1s, and the output will be a similar
+        sequence, except the input has to be the same for two successive values for the output to
+        change. That is, if the input is 000100111, then the output will be 000000011 -- it will
+        ignore the spurious 1 surrounded by 0s (it also ignores the first 1 of the run at the end).
+        
+      @hl.ref(
+        original/'chapter10/"fig10.7.txt"
+      )
+      
+      @p
+        Finally, here is another state machine implementation technique in Scala. The states are
+        represented by an abstract data type (case objects extending the @code{State} class); each
+        state has a field holding the machine's output when in that state (this is what is called
+        a Moore machine, as opposed to a Mealy machine where the output is determined by the
+        transition leading to the state). The transitions are reflected in the pattern-matching
+        function (the @code{case} statements), and running the machine is performed by the
+        @code{scanLeft} operation on the input list of characters. The result of the scan is a
+        list of the states visited, so mapping over that with a function to extract the output
+        values produces the output string.
+      @hl.ref(
+        translated/'chapter10/"BounceFilter.scala",
+        "sealed abstract class State"
+      )
+        
   @sect{Chapter 11: Recursive Description of Patterns}
     @p
   
