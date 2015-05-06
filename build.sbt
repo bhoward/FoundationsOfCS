@@ -13,6 +13,7 @@ lazy val fcsc = (project in file("."))
     unmanagedResourceDirectories in Compile := Nil,
     unmanagedResourceDirectories in Test := Nil,
     libraryDependencies ++= Seq(
+      "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
       "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
       "org.scalacheck" %% "scalacheck" % "1.12.2" % "test",
       "com.storm-enroute" %% "scalameter-core" % "0.6"
