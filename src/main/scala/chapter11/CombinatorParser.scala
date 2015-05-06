@@ -12,7 +12,8 @@ object CombinatorParser {
     override def skipWhitespace = false
 
     def B: Parser[Balance] =
-      ( "(" ~ B ~ ")" ~ B ^^ { case _ ~ first ~ _ ~ second => Parens(first, second) }
+      ( "(" ~ B ~ ")" ~ B ^^ { case _ ~ first ~ _ ~ second =>
+                                 Parens(first, second) }
       | ""                ^^ { case _ => Empty }
       )
 
@@ -24,4 +25,21 @@ object CombinatorParser {
       case _: NoSuccess => None
     }
   }
+  
+  def main(args: Array[String]): Unit = {
+    val in = new java.util.Scanner(System.in)
+    while (in.hasNextLine) {
+      val line = in.nextLine()
+      BalancedParens(line) match {
+        case Some((t, leftover)) =>
+          println("Success:")
+          println(t)
+          println("Unparsed input: " + leftover)
+          println()
+        case None =>
+          println("Fail")
+      }
+    }
+  }
+
 }
