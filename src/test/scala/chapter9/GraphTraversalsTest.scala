@@ -45,14 +45,20 @@ class GraphTraversalsTest extends TestSpec {
   
   val sample3 = sample1 + ("BW490" -> Set("BW491")) + ("BW491" -> Set[String]())
   
-  "Iterative Breadth-First Search" should "List nodes in order by distance from start" in {
+  "Iterative Breadth-First Search" should "Map nodes to their shortest path from start" in {
     val result = bfsQueue("BW101", sample3)
-    result.head should be("BW101")
-    result.last should be("BW491")
+    result("BW101") should be(Nil)
+    result("BW102") should be(List("BW101"))
+    result("BW150") should be(List("BW101"))
+    result("BW210") should be(List("BW102", "BW101"))
+    result("BW220") should be(List("BW102", "BW101"))
+    result("BW230") should be(List("BW102", "BW101"))
+    result("BW300") should be(List("BW150", "BW101"))
+    result("BW325") should (be(List("BW300", "BW150", "BW101")) or be(List("BW230", "BW102", "BW101")))
+    result("BW350") should be(List("BW230", "BW102", "BW101"))
+    result("BW490") should be(List("BW300", "BW150", "BW101"))
+    result("BW491") should be(List("BW490", "BW300", "BW150", "BW101"))
   }
-  
-  println(dfs(sample1)._1)
-  println(dfsStack(sample1)._1)
   
   // TODO write more tests, and some properties
 }

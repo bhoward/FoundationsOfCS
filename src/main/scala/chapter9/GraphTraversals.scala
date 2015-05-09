@@ -75,25 +75,27 @@ object GraphTraversals {
     (forest, result)
   }
 
-  def bfsQueue[Node](start: Node, graph: GRAPH[Node]): List[Node] = {
+  def bfsQueue[Node](start: Node, graph: GRAPH[Node]): Map[Node, List[Node]] = {
     import scala.collection.mutable.Queue
 
-    var visited = List[Node]()
+    var visited = Map[Node, List[Node]]()
 
-    val queue = Queue[Node]()
-    queue.enqueue(start)
+    val queue = Queue[(Node, List[Node])]()
+    queue.enqueue(start -> Nil)
     while (queue.nonEmpty) {
       queue.dequeue() match {
-        case n =>
+        case (n, path) =>
           if (visited contains n) {
+            // already visited; ignore
           } else {
-            visited ::= n
-            for (n1 <- graph(n)) queue.enqueue(n1)
+            visited += (n -> path)
+            val path2 = n :: path
+            for (n1 <- graph(n)) queue.enqueue(n1 -> path2)
           }
       }
     }
 
-    visited.reverse
+    visited
   }
   
   // TODO Dijkstra and Prim, using Priority Queues

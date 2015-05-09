@@ -1030,9 +1030,8 @@
       
       @p
         Finally, here is an iterative traversal using a queue instead of a stack. As expected, it
-        performs a breadth-first traversal instead of depth-first. For simplicity, it only returns
-        a list of the nodes in the order in which they were visited (that is, in order by
-        unweighted distance from the start node).
+        performs a breadth-first traversal instead of depth-first. Instead of a search tree, it returns
+        a map associating each node with the shortest path found from the start to that node.
       
       @hl.ref(
         translated/'chapter9/"GraphTraversals.scala",
