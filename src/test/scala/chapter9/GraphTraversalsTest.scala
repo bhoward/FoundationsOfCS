@@ -30,7 +30,7 @@ class GraphTraversalsTest extends TestSpec {
   it should "Find a cycle in another sample graph" in {
     dfs(sample2)._2 should be(Cyclic)
   }
-  
+
   "Iterative Depth-First Search" should "Find a topological sort of a sample graph" in {
     inside(dfsStack(sample1)) {
       case (_, TopologicalOrder(ns)) =>
@@ -42,11 +42,9 @@ class GraphTraversalsTest extends TestSpec {
   it should "Find a cycle in another sample graph" in {
     dfsStack(sample2)._2 should be(Cyclic)
   }
-  
-  val sample3 = sample1 + ("BW490" -> Set("BW491")) + ("BW491" -> Set[String]())
-  
+
   "Iterative Breadth-First Search" should "Map nodes to their shortest path from start" in {
-    val result = bfsQueue("BW101", sample3)
+    val result = bfsQueue("BW101", sample1)
     result("BW101") should be(Nil)
     result("BW102") should be(List("BW101"))
     result("BW150") should be(List("BW101"))
@@ -57,8 +55,24 @@ class GraphTraversalsTest extends TestSpec {
     result("BW325") should (be(List("BW300", "BW150", "BW101")) or be(List("BW230", "BW102", "BW101")))
     result("BW350") should be(List("BW230", "BW102", "BW101"))
     result("BW490") should be(List("BW300", "BW150", "BW101"))
-    result("BW491") should be(List("BW490", "BW300", "BW150", "BW101"))
   }
-  
+
+  val wsample = Map(
+    "Maili" -> Set((15.0, "Wahiawa"), (20.0, "Pearl City")),
+    "Wahiawa" -> Set((15.0, "Maili"), (12.0, "Pearl City"), (28.0, "Laie")),
+    "Pearl City" -> Set((20.0, "Maili"), (12.0, "Wahiawa"), (13.0, "Honolulu")),
+    "Laie" -> Set((28.0, "Wahiawa"), (24.0, "Kaneohe")),
+    "Kaneohe" -> Set((24.0, "Laie"), (11.0, "Honolulu")),
+    "Honolulu" -> Set((13.0, "Pearl City"), (11.0, "Kaneohe")))
+    
+  "Dijkstra's Algorithm" should "Map nodes to their distance and shortest path from start" in {
+    val result = dijkstra("Honolulu", wsample)
+    result("Honolulu") should be(0 -> Nil)
+    result("Pearl City") should be(13 -> List("Honolulu"))
+    result("Maili") should be(33 -> List("Pearl City", "Honolulu"))
+    result("Wahiawa") should be(25 -> List("Pearl City", "Honolulu"))
+    result("Laie") should be(35 -> List("Kaneohe", "Honolulu"))
+    result("Kaneohe") should be(11 -> List("Honolulu"))
+  }
   // TODO write more tests, and some properties
 }

@@ -2,8 +2,9 @@ package chapter9
 
 // Based on Figures 9.27, 9.31, 9.33, and 9.44-47 of Aho & Ullman
 object GraphTraversals {
-  // Adjacency list representation of directed graph
+  // Adjacency list representations of unweighted/weighted directed graphs
   type GRAPH[Node] = Map[Node, Set[Node]]
+  type WGRAPH[Node] = Map[Node, Set[(Double, Node)]]
 
   case class TREE[Node](root: Node, children: FOREST[Node])
   type FOREST[Node] = List[TREE[Node]]
@@ -88,7 +89,7 @@ object GraphTraversals {
           if (visited contains n) {
             // already visited; ignore
           } else {
-            visited += (n -> path)
+            visited += n -> path
             val path2 = n :: path
             for (n1 <- graph(n)) queue.enqueue(n1 -> path2)
           }
@@ -97,8 +98,33 @@ object GraphTraversals {
 
     visited
   }
-  
-  // TODO Dijkstra and Prim, using Priority Queues
+
+  def dijkstra[Node](start: Node,
+    graph: WGRAPH[Node]): Map[Node, (Double, List[Node])] = {
+    import scala.collection.mutable.PriorityQueue
+
+    var visited = Map[Node, (Double, List[Node])]()
+
+    implicit val byMinimumDistance =
+      Ordering.by((x: (Node, (Double, List[Node]))) => -x._2._1)
+    val queue = PriorityQueue[(Node, (Double, List[Node]))]()
+    queue.enqueue(start -> (0, Nil))
+    while (queue.nonEmpty) {
+      queue.dequeue() match {
+        case (n, (d, path)) =>
+          if (visited contains n) {
+            // already visited; ignore
+          } else {
+            visited += n -> (d, path)
+            val path2 = n :: path
+            for ((w, n1) <- graph(n)) queue.enqueue(n1 -> (d + w, path2))
+          }
+      }
+    }
+
+    visited
+  }
+
   // TODO Union-find? (Figures 9.19-20)
   // TODO Floyd/Warshall? (Figure 9.50)
 }
