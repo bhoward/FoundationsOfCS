@@ -6,5 +6,5 @@
     for (u = 0; u < MAX; u++)
         for (v = 0; v < MAX; v++)
             for (w = 0; w < MAX; w++)
-                if (dist[v][u] + dist[u][w] <
+                if (dist[v][u] + dist[u][w] < dist[v][w])
                     dist[v][w] = dist[v][u] + dist[u][w];

@@ -2,9 +2,8 @@ package chapter9
 
 // Based on Figures 9.27, 9.31, 9.33, and 9.44-47 of Aho & Ullman
 object GraphTraversals {
-  // Adjacency list representations of unweighted/weighted directed graphs
+  // Adjacency list representation of unweighted directed graph
   type GRAPH[Node] = Map[Node, Set[Node]]
-  type WGRAPH[Node] = Map[Node, Set[(Double, Node)]]
 
   case class TREE[Node](root: Node, children: FOREST[Node])
   type FOREST[Node] = List[TREE[Node]]
@@ -99,6 +98,9 @@ object GraphTraversals {
     visited
   }
 
+  // Adjacency list representation of weighted directed graph
+  type WGRAPH[Node] = Map[Node, Set[(Double, Node)]]
+  
   def dijkstra[Node](start: Node,
     graph: WGRAPH[Node]): Map[Node, (Double, List[Node])] = {
     import scala.collection.mutable.PriorityQueue
@@ -125,6 +127,37 @@ object GraphTraversals {
     visited
   }
 
+  // Adjacency matrix representation of weighted directed graph
+  import scala.collection.mutable.Buffer
+  type MGRAPH[Node] = (Buffer[Node], Buffer[Buffer[Double]])
+  
+  def adjList2Matrix[Node](graph: WGRAPH[Node]): MGRAPH[Node] = {
+    val nodes = graph.keys.toBuffer
+    val nodeMap = Map((for (i <- 0 until nodes.length) yield nodes(i) -> i): _*)
+    val m = Buffer.fill(nodes.length, nodes.length)(Double.PositiveInfinity)
+    
+    for ((source, neighbors) <- graph) {
+      val s = nodeMap(source)
+      m(s)(s) = 0
+      for ((weight, target) <- neighbors) {
+        val t = nodeMap(target)
+        m(s)(t) = weight
+      }
+    }
+    
+    (nodes, m)
+  }
+  
+  def floyd[Node](graph: MGRAPH[Node]): Unit = {
+    val (_, m) = graph
+    for (u <- 0 until m.length) {
+      for (v <- 0 until m.length) {
+        for (w <- 0 until m.length) {
+          m(v)(w) = m(v)(w) min (m(v)(u) + m(u)(w))
+        }
+      }
+    }
+  }
+  
   // TODO Union-find? (Figures 9.19-20)
-  // TODO Floyd/Warshall? (Figure 9.50)
 }

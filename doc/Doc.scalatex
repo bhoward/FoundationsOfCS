@@ -1038,7 +1038,7 @@
         @hl.ref(
           translated/'chapter9/"GraphTraversals.scala",
           "def bfsQueue",
-          "def dijkstra"
+          "// Adjacency list"
         )
       
       @sect{Dijkstra's Algorithm}
@@ -1061,10 +1061,31 @@
           
         @hl.ref(
           translated/'chapter9/"GraphTraversals.scala",
-          "def dijkstra",
+          "type WGRAPH",
+          "// Adjacency matrix"
+        )
+        
+      @sect{Floyd's Algorithm}
+        @p
+          A different approach to finding minimum distances between all pairs of nodes in a graph is to
+          use the adjacency matrix representation. In Figure 9.50, Aho & Ullman give a code fragment
+          corresponding to Floyd's algorithm:
+          
+        @hl.ref(
+          original/'chapter9/"fig9.50.txt"
+        )
+        
+        @p
+          Here is a Scala translation, together with a function @code{adjList2Matrix} that converts from 
+          an adjacency list representation to an adjacency matrix. The function @code{floyd} modifies the
+          matrix in-place, resulting in a "distance table".
+          
+        @hl.ref(
+          translated/'chapter9/"GraphTraversals.scala",
+          "type MGRAPH",
           "// TODO"
         )
-      
+        
   @sect{Chapter 10: Patterns, Automata, and Regular Expressions}
     @p
       There are many ways to implement the state machine concept in code. The essence is that
