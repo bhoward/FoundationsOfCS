@@ -17,6 +17,7 @@ project/plugins/project/
 .worksheet
 .classpath
 .project
+.cache-*
 /bin/
 
 /tmp/
