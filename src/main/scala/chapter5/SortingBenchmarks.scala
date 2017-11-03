@@ -1,12 +1,12 @@
 package chapter5
 
-import org.scalameter.{config, Key, Warmer, Measurer}
+import org.scalameter.{config, Key, Warmer, Measurer, Quantity}
 import scala.util.Random
 
 import chapter2.{IterativeSelectionSort, RecursiveSelectionSort, MergeSortImmutableList}
 
 object SortingBenchmarks {
-  def benchmark[C](sort: C => Unit, inputs: Seq[C]): Seq[Double] = {
+  def benchmark[C](sort: C => Unit, inputs: Seq[C]): Seq[Quantity[Double]] = {
     for (c <- inputs) yield {
       config(Key.exec.benchRuns -> 20)
         .withWarmer(new Warmer.Default)
