@@ -25,13 +25,13 @@ object GraphTraversals {
           f
         } else {
           visited += n
-          val children = aux(graph(n)).reverse
+          val children = aux(graph(n))
           finished ::= n
-          TREE(n, children) :: f
+          f :+ TREE(n, children)
         }
     }
 
-    val forest = aux(graph.keySet).reverse
+    val forest = aux(graph.keySet)
     val result = if (cycle) Cyclic else TopologicalOrder(finished)
     (forest, result)
   }
@@ -64,13 +64,13 @@ object GraphTraversals {
           }
         case Finish(n) =>
           finished ::= n
-          val children = trees.pop().reverse
+          val children = trees.pop()
           val siblings = trees.pop()
-          trees.push(TREE(n, children) :: siblings)
+          trees.push(siblings :+ TREE(n, children))
       }
     }
 
-    val forest = trees.pop().reverse
+    val forest = trees.pop()
     val result = if (cycle) Cyclic else TopologicalOrder(finished)
     (forest, result)
   }
