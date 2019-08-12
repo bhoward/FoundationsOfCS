@@ -1,0 +1,818 @@
+% !TEX root = ../root.tex
+
+\section{Introduction to Scala}
+\firstthought{The Scala programming language} is a relative of Java that enables what is known as a ``functional'' programming style; what this means will be the subject of much of the rest of this chapter. This introduction assumes that you are already familiar with programming in Java and/or C++. You may not be an expert, but you are comfortable with writing classes and methods. We will by no means be learning all of Scala here, and when there are multiple ways to express something in Scala we will generally just choose one. The emphasis is on becoming able to read and write simple functions to manipulate the kinds of data models talked about in the Foundations class: lists, trees, graphs, \textit{etc}. Although Scala also has extensive support for an object-oriented style of programming, we will be focusing on its support for functional programming.
+
+Before diving into the details, here is a short sales pitch for Scala. This is a quote from the main Scala website, \url{http://www.scala-lang.org/}:
+\begin{quotation}
+Scala\index{Scala} is a general purpose programming language designed to express common programming patterns in a concise, elegant, and type-safe way. Scala smoothly integrates features of object-oriented and functional languages, enabling developers to be more productive while retaining full interoperability with Java and taking advantage of modern multicore hardware.
+\end{quotation}
+Scala is a real-world, commercial-strength language, being used at companies such as Twitter, LinkedIn, Verizon, and many others; one of its attractions to these businesses is that it is very compatible with existing Java code, while also supporting more advanced programming techniques as found in functional languages such as Haskell and F$^\sharp$, or in dynamic languages such as Python and Ruby.
+
+The ``functional'' programming style referred to above is not meant to imply that other styles are dysfunctional; rather, it refers to an emphasis on building programs out of pure functions. A pure function\index{pure function}\index{function!pure} is a block of code whose result depends only on the values of its input parameters; just like a function in mathematics, every time it is called with the same arguments it will return the same result. Furthermore, calling a pure function must have no side-effects\index{side-effect}---it will not change the state of any external variable, nor perform input or output, nor throw an exception.
+
+Clearly we do not want to write entire programs with no side-effects, since they could never interact with the user. However, the functional style\index{functional style} encourages a program structure where all external effects are handled at the outermost layer, with the main body of the program composed entirely out of pure functions. There are many advantages to this design: functional code is easier to reason about and to test, it is more likely to be reusable, and it may well be easier to optimize for different hardware configurations, such as multicore processors or distributed clusters.
+
+One consequence of performing a computation in a pure function is that it has a property known as ``referential transparency.''\index{referential transparency} The essence of this is that a function call may be replaced by its result value at any point in a program without affecting the behavior of the program (except perhaps its running time). This enables us to reason about functional programs using a substitution model,\index{substitution model} just as used in algebra: if we know that the referentially transparent expressions $e_1$ and $e_2$ are equal, then whenever we see $e_1$ in a program we may replace it with $e_2$.
+
+Here is an example of a Java function that is \emph{not} pure:\index{function!impure}
+\begin{verbatim}
+public int double(int n) {
+  System.out.println("Doubling " + n);
+  runningTotal += n;
+  return 2 * n;
+}
+\end{verbatim}
+Each time \verb|double(n)| is called, it has two side-effects:\index{side-effect} it prints a message to the console and it modifies an external variable (\verb|runningTotal|, which is presumably an instance variable or static field of a containing class). Now consider the following program fragment:
+\begin{verbatim}
+int x = double(3) * double(3)
+\end{verbatim}
+The resulting value of \verb|x| will be 36, but the net effect of executing that statement in Java will be different from either of the following:
+\begin{verbatim}
+int y = double(3);
+int x = y * y;
+\end{verbatim}
+or
+\begin{verbatim}
+int x = 6 * 6;
+\end{verbatim}
+When we deal with impure functions, our ability to reason about and manipulate code becomes significantly more complicated than just performing substitution.
+
+In Scala, a pure function definition will have the following form:\index{Scala!function definition}
+\begin{verbatim}
+def <function-name>(<parameters>): <type> = <expression>
+\end{verbatim}
+The parameters\index{Scala!parameters} should be a comma-separated list of zero or more entries of the form \verb|<variable-name>: <type>|. Variable and function names\index{Scala!identifiers} follow the usual rules for Java identifiers (with some extensions we will see later): they must start with a letter, and consist of letters, digits, or underscores. The expression on the right-hand side should have the given return type;\index{Scala!return type}\footnote{In many cases Scala can infer\index{type inference} the return type if it is not provided, but we will see an important case where it cannot, so it is a good habit to always specify it.} it may be a simple expression or a block surrounded by braces.\index{Scala!block} If it is a block, then all but the last statement should be definitions of local functions or constants;\footnote{We will see later that blocks may also contain local import statements and definitions of objects, classes, traits, or types. Statements before the end of the block can also be expressions, but since they could only be evaluated for their side-effects,\index{side-effect} we will not need this in functional code.} the last statement will be the expression whose value is returned. A constant definition\index{Scala!constant definition} has the form:
+\begin{verbatim}
+val <variable-name> = <expression>
+\end{verbatim}
+An explicit type may be given after the name, such as \verb|val n: Int = 42|, but Scala is usually able to infer the correct type without this.
+
+For example, here is a function that returns the square of the double of its integer argument (there are simpler ways to do this, but we want to explore the possibilities):
+\begin{verbatim}
+def squareDouble(k: Int): Int = {
+  def double(n: Int): Int = 2 * n
+  val x = double(k)
+  x * x
+}
+\end{verbatim}
+Note that, in addition to the placement of the type annotation \emph{after} the variable, Scala has another minor syntactic difference from Java: semicolons are optional at the end of a line.
+
+As an example of reasoning by substitution,\index{substitution model} here is one way to evaluate a function call such as \verb|squareDouble(3)|:
+\[ \begin{array}{rcl}
+\verb|squareDouble(3)| & = & \verb|x * x|,\quad
+\begin{array}[t]{l}
+\textit{where }\verb|x = double(3)|\\
+\textit{and }\verb|double(n) = 2 * n|
+\end{array}\\
+& = & \verb|x * x|,\quad
+\begin{array}[t]{l}
+\textit{where }\verb|x = 2 * 3|
+\end{array}\\
+& = & \verb|x * x|,\quad
+\begin{array}[t]{l}
+\textit{where }\verb|x = 6|
+\end{array}\\
+& = & \verb|6 * 6|\\
+& = & \verb|36|
+\end{array} \]
+
+We will occasionally have need of modifiable local variables,\index{Scala!variable definition} which are defined like constants but use the keyword \verb|var| instead of \verb|val|. A variable may be assigned\index{Scala!assignment} a new value after definition with an assignment statement, just as in Java:
+\begin{verbatim}
+var x = 1
+x = x + 1  // after this, x will be 2
+\end{verbatim}
+However, this reduces the purity of the code (reasoning about an expression containing \verb|x| needs to take into account what its current value is, whether it is before or after an assignment), and in general we will prefer ``immutable''\index{immutability} variables (\textit{i.e.}, constants). When we deal with larger data structures, this preference for immutability will continue.
+
+\begin{tailquote}
+In 1977, John Backus\index{Backus, John} (1924--2007)---one of the inventors of the Fortran programming language---was awarded the highest prize in computing, the Turing Award. The lecture he gave at the award ceremony was titled ``Can Programming Be Liberated from the von Neumann Style? A Functional Style and Its Algebra of Programs.'' Backus enumerated many of the problems he had seen with languages such as Fortran, and his algebraic approach to reasoning about pure expression-based programs influenced much subsequent research in functional programming.
+\end{tailquote}
+\begin{exercises}
+\item Consider the following Scala function:
+\begin{verbatim}
+def exercise(a: Int, b: Int): Int = {
+  def m(x: Int, y: Int): Int = x - y
+  def s(n: Int): Int = n * n
+  val c = m(a, b)
+  val d = m(a, c)
+  val e = c + d
+  s(d) - s(e)
+}
+\end{verbatim}
+\begin{enumerate}
+\item What is the value of \verb|exercise(4, 5)|?
+\item What is the value of \verb|exercise(12, 13)|?
+\item Use algebraic substitution to evaluate \verb|exercise(a, b)| in terms of the variables \verb|a| and \verb|b|.
+\end{enumerate}
+
+\item Write a Scala function named \verb|average| that takes three integer arguments and calculates their average. For example, \verb|average(7, 1, 2)| should return \verb|3| (use integer division, which rounds toward zero).
+
+\item Write a Scala function named \verb|median| that takes three integer arguments and calculates their median (that is, the middle of the three numbers when they are put in increasing order). For example, \verb|median(7, 1, 2)| should return \verb|2|. You may use the library functions \verb|math.min(a, b)| and \verb|math.max(a, b)|, which respectively return the smaller and the larger of their arguments.
+\end{exercises}
+
+\section{Types}
+\firstthought{While it is not strictly necessary} to have explicit types\index{types} for a language to be functional, it is important to have a notion (perhaps only in the programmer's mind) of the range of values allowed for a given variable or expression, as well as the ways it may be used (for example, whether it may be applied to an argument). Scala has a rich set of mechanisms for describing types, and the compiler will check that the explicitly declared types in a program are consistent.
+
+In this and following sections, we will walk through a useful subset of these types, and describe the corresponding code constructs for operating on them. One recurrent theme will be that the type of the data determines the structure of the program; once you know the input and output types of a function, you can often lay out a skeleton for how the function must be written.
+
+\paragraph{Booleans}
+\firstthought{The simplest type} conveying a non-trivial amount of information is the common \verb|Boolean| type,\index{types!Boolean} whose values may only be \verb|true| or \verb|false|. Scala has the usual relational operators\index{Scala!relational operators}\index{operators!relational} (\verb|==|, \verb|!=|, \verb|<=|, \textit{etc}.) familiar from Java and other C-derived languages; the only difference here is that the equality test defaults to checking equality of values, rather than just object identity (so you do not have to remember to use \verb|.equals| on strings\ldots). It also has the familiar logical operators\index{Scala!logical operators}\index{operators!logical} \verb|&&| (\textsc{and}), \verb-||- (\textsc{or}), and \verb|!| (\textsc{not}).
+
+The obvious way to use a Boolean value is with an \verb|if| expression\index{Scala!if expression}:
+\begin{verbatim}
+if (<test>) <true-clause> else <false-clause>
+\end{verbatim}
+If the expression \verb|<test>| evaluates to \verb|true|, then the whole expression evaluates to \verb|<true-clause>|, otherwise it evaluates to \verb|<false-clause>|. Note that, in Scala, \verb|if| is an \emph{expression} rather than a statement---it may be used anywhere a value is needed that depends on the result of a test. For example, here is an absolute value function:
+\begin{verbatim}
+def absoluteValue(x: Double): Double = if (x >= 0) x else -x
+\end{verbatim}
+
+Another running theme in Scala is the use of ``pattern matching''\index{Scala!match expression}\index{pattern matching} to take values apart. For a Boolean value, the appropriate pattern match takes the following form:
+\begin{verbatim}
+<test> match {
+  case true => <true-clause>
+  case false => <false-clause>
+}
+\end{verbatim}
+The behavior in this case is exactly the same as the above \verb|if| expression; performing this operation on Booleans is so common that the shorter \verb|if| form is generally used.
+
+\paragraph{Primitives}
+\firstthought{Scala is usually compiled} to run on the same virtual machine as Java (although there are other alternatives), so it is not surprising that it offers the same range of primitive types\index{types!primitive} as Java. Just about the only difference is that the type names are capitalized: integers are \verb|Int|, floating-point numbers are \verb|Double|, and characters are \verb|Char|. We will stick to these primitive types in this book, although the others (such as \verb|Long|, \verb|Byte|, and \verb|Float|) are also available.\footnote{The intuition for primitive values is that they can be stored in a small, fixed number of bytes and operated on by single machine instructions.}
+
+All of the usual literal constants\index{Scala!literals} and operators are carried over from Java, except the ``cast'' operation is not directly supported. If you want to convert a \verb|Double| to an \verb|Int|, for example, use the \verb|toInt| method:\footnote{Note that, unlike Java, Scala treats even primitive values as if they were objects with methods.} \verb|x.toInt| instead of \verb|(int) x|.
+
+One interesting generalization in Scala is that all operators\index{Scala!operators}\index{operators!Scala} are treated as method calls. For example, \verb|a + b| is compiled as if it were \verb|a.+(b)|. This allows us to extend the available operators by defining our own methods with ``symbolic'' names. In fact, operators don't need to be symbols---any single-argument method may be used as an operator. Thus, the \verb|max| method on numbers, where \verb|a.max(b)| is the larger of \verb|a| and \verb|b|, may also be written as \verb|a max b|.
+
+Pattern matching\index{pattern matching} on primitives looks like the usual \verb|switch|/\verb|case| statement from C and Java, except as above it produces an expression whose value is given by the matching case:
+\begin{verbatim}
+def factorial(n: Int): Int = n match {
+  case 0 => 1
+  case _ => n * factorial(n - 1)
+}
+\end{verbatim}
+The second case in this example uses the ``wildcard'' pattern,\index{wildcard}\index{_@\_} \verb|_| (underscore). This pattern matches anything, so it serves as the \emph{default} case. This example also demonstrates defining a function recursively,\index{function!recursive} where the value at one argument depends on first computing the value for some other argument; we will have much more to say about this below.\footnote{Defining a recursive function is the situation mentioned above where the compiler is not always able to infer a return type;\index{Scala!return type}\index{type inference} in the example, it would have to know that \texttt{factorial} returns an \texttt{Int} before it could figure out the type on the right-hand side.}
+
+Patterns may also have ``guard''\index{Scala!guard expression} expressions---tests that have to evaluate to \verb|true| for the case to match. For example, here is a match that converts a character representing a hexadecimal digit to its integer value; if the digit is invalid, it returns \verb|-1|:
+\begin{verbatim}
+digit match {
+  case d if '0' <= d && d <= '9' => d - '0'
+  case d if 'A' <= d && d <= 'F' => d - 'A' + 10
+  case d if 'a' <= d && d <= 'f' => d - 'a' + 10
+  case _ => -1
+}
+\end{verbatim}
+
+\paragraph{Strings}
+\firstthought{A Scala string}\index{types!string}\index{Scala!strings} is literally the same as a Java string, at least when compiled to the Java VM. Some additional methods have been added for convenience, such as:
+\begin{itemize}
+\item \verb|head|, which returns the first character (\verb|s.head| is the same as \verb|s.charAt(0)|),
+\item \verb|tail|, which returns all but the first character (\verb|s.tail| is the same as \verb|s.substring(1, s.length())|), and
+\item \verb|toInt|, which attempts to parse an integer value from its string representation (\verb|s.toInt| is the same as \verb|Integer.parseInt(s)|).
+\end{itemize}
+Note that these methods, which are defined in terms of some underlying Java methods, are not strictly pure\index{function!impure}---in each case, they may throw an exception if the string doesn't satisfy some precondition (for \verb|head| and \verb|tail|, it must be non-empty; for \verb|toInt|, it must consist only of one or more digits, optionally preceded by a sign \verb|+| or \verb|-|). However, Java strings (unlike strings in C or C++) \emph{are} immutable, so at least no operation on a string can change the underlying character sequence.\index{immutability}
+
+As mentioned above, strings may be compared for equality with the \verb|==| operator. They have also been extended with comparison operators,\index{Scala!relational operators}\index{operators!relational} so \verb|s < t| is true when \verb|s| lexically precedes \verb|t|.
+
+A convenient extension in Scala is the ability to specify strings that contain special characters, such as quotes and newlines, by enclosing them in triple quotes (these are called ``raw strings''):\index{Scala!raw strings}
+\begin{verbatim}
+"""This is a string with several lines.
+This is the second line, which contains a quotation: "Hello World".
+This is the third line."""
+\end{verbatim}
+To make this easier when code is indented, there is a method named \verb|stripMargin| that will remove leading characters up to the first vertical bar on each line:
+\begin{verbatim}
+"""This is a string with several lines.
+  |This is the second line, which contains a quotation: "Hello World".
+  |This is the third line.""".stripMargin
+\end{verbatim}
+
+Another extension to the notation for strings is ``string interpolation.''\index{Scala!string interpolation}\index{$@\$} This is actually a very general and extensible facility in the language, but in its simplest form, if you prefix a string literal with the letter \verb|s|, then any occurrence of \verb|$|$x$ in the string will be replaced by the value of variable $x$ (converted to a string, if necessary). Instead of a single variable, an entire expression \textit{expr} may be interpolated if it is enclosed in braces: \verb|${|\textit{expr}\verb|}|. Here is an example:
+\begin{verbatim}
+s"The value of x is $x, and x*7 is ${x*7}."
+\end{verbatim}
+If $x$ is 6, then this evaluates to \verb|"The value of x is 6, and x*7 is 42."|
+
+Pattern matching on strings is similar to that on primitives: each case specifies a string literal to be matched, or a guard expression to be satisfied.\index{pattern matching} Later in the book, when we see regular expressions, there will be a more general notion of pattern matching for strings.
+
+\paragraph{Tuples}
+\firstthought{If a function} needs to return more than one value, it is convenient to be able to package up several values into a single object. In Java, you might create a new class with the desired fields (think of the \verb|Point| class, with \verb|x| and \verb|y| fields). In Scala, a simpler option is to create a ``tuple''\index{types!tuple} (sometimes called an $n$-tuple,\index{n-tuple@$n$-tuple} where $n$ is the number of values). A tuple value is written by giving a comma-separated list of values in parentheses; for example, \verb|(42, "Hello World", false)|. The corresponding type is written as a list of types in parentheses; for example, \verb|(Int, String, Boolean)|.
+
+A 2-tuple is also known as a pair\index{pair} (and a 3-tuple is a triple, \textit{etc.}). An interesting special case is the 0-tuple: the only value is the empty tuple, \verb|()|. The type of the empty tuple is \verb|Unit|;\index{types!unit} it plays the same role as \verb|void| in Java. A function that takes a \verb|Unit| argument might as well not take an argument, because the single value provides no information. A function that \emph{returns} the \verb|Unit| type is suspicious: if it doesn't return a value, then the only reason to call it must be to perform some side-effect.\index{side-effect} Indeed, one of the places we will encounter the \verb|Unit| type is as the return value of non-pure functions\index{function!impure} such as \verb|println|.
+
+Individual elements of a tuple may be accessed with the methods \verb|_1|,\index{_1@\texttt{\_1}} \verb|_2|,\index{_1@\texttt{\_2}} \textit{etc.} However, it is often more natural to extract elements of a tuple with pattern matching.\index{pattern matching} For example, the \verb|splitAt| method on strings returns a pair of strings: \verb|s.splitAt(n)| yields \verb|(a, b)|, where \verb|a.length == n| and \verb|a + b == s|. We may extract these two strings from the pair\index{pair} as follows:
+\begin{verbatim}
+s.splitAt(n) match {
+  case (first, second) =>
+    s"""The first $n characters are "$first",
+       |and the rest are "$second".""".stripMargin
+}
+\end{verbatim}
+If \verb|s| is \verb|"Hello World"| and \verb|n| is 5, then the result of this expression is
+\begin{verbatim}
+The first 5 characters are "Hello",
+and the rest are " World".
+\end{verbatim}
+
+Patterns may be combined, such as a tuple pattern containing literal or wildcard patterns. For example, here is one way to define a Boolean \textsc{and} function:
+\begin{verbatim}
+def and(x: Boolean, y: Boolean): Boolean = (x, y) match {
+  case (false, _) => false
+  case (_, false) => false
+  case _ => true
+}
+\end{verbatim}
+These cases say that if either \verb|x| or \verb|y| is \verb|false|, then the result is \verb|false|; otherwise it is \verb|true|. Note that the first two cases overlap: if \verb|x| and \verb|y| are both false, then both patterns will match. Scala always chooses the first case with a matching pattern (so a default case, if present, must occur last). Also notice the technique of combining \verb|x| and \verb|y| into a tuple so that the pattern match can depend on both.\index{pattern matching}
+
+\begin{tailquote}
+In programming, a type system serves to prevent certain kinds of errors when a program is run. Types\index{types} were used in the early 20\textsuperscript{th} century for a similar purpose: they prevented certain paradoxes when formalizing mathematical logic. This is not entirely coincidental---many aspects of computer hardware and programming languages were influenced by the work of logicians such as Alan Turing,\index{Turing, Alan} Alonzo Church,\index{Church, Alonzo} and Haskell Curry.\index{Curry, Haskell}
+\end{tailquote}
+\begin{exercises}
+\item Consider this Scala function:
+\begin{verbatim}
+def foo(m: Int, n: Int): Int = n match {
+  case 0 => 1
+  case _ if n % 2 == 1 => m * foo(m, n - 1)
+  case _ =>
+    val p = foo(m, n / 2)
+    p * p
+}
+\end{verbatim}
+Recall that \verb|%| is the mod operator: \verb|a % b| is the remainder when \verb|a| is divided by \verb|b|.\index{%@\%}
+\begin{enumerate}
+\item What is the value of \verb|foo(3, 0)|?
+\item What is the value of \verb|foo(3, 1)|?
+\item What is the value of \verb|foo(3, 2)|?
+\item What is the value of \verb|foo(3, 3)|?
+\item What is the value of \verb|foo(3, n)|, in terms of \verb|n|?
+\end{enumerate}
+
+\item Write Scala functions that compute the inclusive and exclusive \textsc{or} operations. That is, write Boolean functions \verb|or(x, y)| and \verb|xor(x, y)| that will return \verb|true| if one of \verb|x| or \verb|y| is \verb|true|; in the inclusive case, \verb|or(true, true)| is also \verb|true|, while for the exclusive case, \verb|xor(true, true)| is \verb|false|. Use pattern matching for one, and \verb|if| expressions for the other (but do not use the built-in logical operators such as \verb-||-).
+
+\item Define a function \verb|minmax(a: Int, b: Int)| that returns a pair of numbers, where the first is the smaller of \texttt{a} and \texttt{b}, and the second is the larger. For example, \verb|minmax(17, 42)| and \verb|minmax(42, 17)| should both return the pair \verb|(17, 42)|.
+
+\item Using the \texttt{minmax} function, define a function \verb|sort3(a: Int, b: Int, c: Int)| that returns a triple of numbers which are \texttt{a}, \texttt{b}, and \texttt{c} in non-decreasing order. For example, \verb|sort3(3, 1, 4)| should return the triple \verb|(1, 3, 4)|. \textit{Hint:} Use \texttt{minmax} to find the correct order of \texttt{a} and \texttt{b}, then use it two more times to place \texttt{c} in the correct relative position among variables \texttt{small}, \texttt{middle}, and \texttt{large}, then simply return the triple \verb|(small, middle, large)|.
+
+\end{exercises}
+
+\section{Collection Types}
+\firstthought{The Scala standard library} provides quite a few types of collections,\index{types!collection} similar to those in the Java standard library but with a more functional treatment. Here are details on a few of them; see the online Scala documentation at \url{http://www.scala-lang.org/api/current/}\index{Scala!documentation} for more.
+\begin{itemize}
+\item \textbf{Lists}:\index{types!list}\index{Scala!lists} If $x_0$, $x_1$, $x_2$, \ldots\ are values all of the same type $T$, then \texttt{List($x_0$, $x_1$, $x_2$, \ldots)} has type \texttt{List[$T$]} (this is akin to the Java parameterized type \texttt{List<$T$>}). Another name for the empty list is \texttt{Nil}, and values may be added to the front of a list using the \texttt{::}\index{::@\texttt{::}} operator,\footnote{Operators ending with a colon are ``right-associative''\index{Scala!right-associative operators}\index{operators!right-associative} in Scala, so this is the same as \texttt{1 ::\ (2 ::\ (3 ::\ Nil))}, which turns into the chain of method calls \texttt{Nil.::(3).::(2).::(1)}.} so \verb|1 :: 2 :: 3 :: Nil| is an equivalent way of constructing \texttt{List(1, 2, 3)}, of type \texttt{List[Int]}. Given two lists, they may be appended with the \texttt{:::}\index{:::@\texttt{:::}} operator: \verb|List(1, 2) ::: List(3, 4)| produces \verb|List(1, 2, 3, 4)|.
+
+The front element of a (non-empty) list $a$ may be retrieved using the \texttt{head} operation: \texttt{$a$.head}; the list of everything except the head is \texttt{$a$.tail}. For example, \texttt{List(1, 2, 3).head} is \texttt{1}, while \texttt{List(1, 2, 3).tail} is \texttt{List(2, 3)}. It is often better to decompose a list with pattern matching:\index{pattern matching}
+\begin{verbatim}
+myList match {
+  case Nil => println("The list is empty")
+  case h :: t => println(s"The head is $h and the tail is $t")
+}
+\end{verbatim}
+Since every list is either empty (\texttt{Nil}) or the concatenation of a head element onto a tail list, \texttt{myList} will match one of the two cases. In the second case, the names \texttt{h} and \texttt{t} (which may be arbitrary variable names) will be bound to the corresponding parts of the list. This is an instance of pattern matching over ``case classes,''\index{Scala!case classes} which are described more below.
+
+Here is another example for lists:
+\begin{verbatim}
+val front = myList match {
+  case Nil => sys.error("Empty list")
+  case f :: _ => f
+}
+\end{verbatim}
+If \texttt{myList} is empty, then the \texttt{sys.error} function will throw an exception with the given message; otherwise, the first element will be bound to \texttt{f} (which is a newly created variable, local to the match), then returned as the result of the match, and ultimately assigned to \texttt{front}.
+
+\item \textbf{Vectors}:\index{types!vector}\index{Scala!vectors} If $x_0$, $x_1$, $x_2$, \ldots\ are values of some type $T$, then \texttt{Vector($x_0$, $x_1$, $x_2$, \ldots)} has type \texttt{Vector[$T$]} (this is akin to the Java type $T$\verb|[]|, although the contents are immutable;\index{immutability} see below). Just as with Java and C++ arrays, vectors are zero-indexed. Element $i$ of vector $v$ is named by the expression \texttt{$v$($i$)}, so if \texttt{$v$.size} is $n$, then the elements of $v$ are \texttt{$v$($0$)} through \texttt{$v$($n-1$)}. Note that indexing\index{Scala!indexing} into a vector looks just like a function call (that is, Scala uses parentheses instead of the  square-bracket notation common to C, C++, and Java); this is intentional, since a vector can be thought of as a function over the domain $\{0, 1, \ldots, n-1\}$. To create a vector containing $n$ copies of some value $x$, use \texttt{Vector.fill($n$)($x$)}. To create a vector corresponding to some function $f$ over the domain $\{0, 1, \ldots, n-1\}$, use \texttt{Vector.tabulate($n$)($f$)}---in the resulting vector of size $n$, element $0$ will be $f(0)$, \textit{etc}.
+
+As mentioned above, vectors are immutable. Scala also contains mutable versions of most of its collections; the mutable vector type is named \verb|Array|,\index{types!array} and all of the above operations are available.
+
+\item \textbf{Sets}:\index{types!set}\index{Scala!sets} The type \texttt{Set[$T$]} is very similar to \texttt{List[$T$]}, except that, just like a mathematical set, it does not keep track of the order in which the elements were inserted, and it does not keep duplicate elements. That is, \texttt{Set(1, 2, 3)} is the same as \texttt{Set(3, 1, 1, 3, 2)}. The fundamental operation on a set is to check whether it contains a particular value: \texttt{$a$.contains($x$)} returns \texttt{true} if $x$ is an element of $a$.\footnote{A set may also be used as a function in Scala: \texttt{$a$($x$)} is the same as \texttt{$a$.contains($x$)}.}
+
+\item \textbf{Maps}:\index{types!map}\index{Scala!maps} A common data structure in dynamic languages is the ``associative array,''\index{associative array} which behaves like an array with indices more general than the integers 0 to $n-1$. For example, it is often useful to be able to index into a collection using a string: after setting \texttt{age("George")}\index{Howard, George} to \texttt{17}, we may retrieve George's age by supplying the index \texttt{"George"} to the map \texttt{age}. The Scala type \texttt{Map[$K$, $T$]} provides this facility: if $k_0$, $k_1$, $k_2$, \ldots\ are \emph{keys} of type $K$, and $x_0$, $x_1$, $x_2$, \ldots\ are values of type $T$, then \texttt{Map($k_0$ -> $x_0$, $k_1$ -> $x_1$, $k_2$ -> $x_2$, \ldots)} will map each key to its corresponding value. If \texttt{age} is \texttt{Map("Alice" -> 9, "Susanna" -> 14, "George" -> 17)},\index{Howard, Alice}\index{Howard, Susanna} then \texttt{age("George")} will be \texttt{17}, as desired; the type of \texttt{age} is \texttt{Map[String, Int]}.
+
+By the way, the expression \texttt{"Alice" -> 9} is another way to write the pair\index{pair}\index{->@\texttt{->}} \texttt{("Alice", 9)}. A map is essentially a set of pairs, stored in a data structure that makes it efficient to use the map as a function to look up the value corresponding to a key. Given a map $m$, the expression \texttt{$m$.keySet} produces a set containing all of the keys for which the map is defined; in the example, \texttt{age.keySet} will be the same as \texttt{Set("George", "Susanna", "Alice")} (remember that order does not matter in a set).
+
+\item \textbf{Options}:\index{types!option}\index{Scala!options} A common source of errors in Java is the convention of returning \texttt{null}\index{null} to indicate that some object was unavailable (for example, given a Java map similar to the \texttt{age} example above, \texttt{age.get("Fred")} would return \texttt{null}). Scala attempts to avoid this by providing the ``option'' type: a value of type \texttt{Option[$T$]} is either \texttt{Some($x$)}, where $x$ is a value of type $T$, or it is the special value \texttt{None}. The advantage over returning \texttt{null} is that \texttt{None} is an actual object; attempting to call a method on it will not result in a null pointer exception. The option type is also a signal to the programmer to be prepared for the case of a non-existent object; in Java, it is too easy to ignore this possibility because \emph{every} object type allows \texttt{null}. To retrieve the contained value from an option object, use the \texttt{get} method: \texttt{Some($x$).get} yields $x$. Attempting to call \texttt{get} on \texttt{None} will throw an exception, so a useful variant is the \texttt{getOrElse} method: \texttt{$a$.getOrElse($y$)} will return the contents of $a$, if any, or $y$ if $a$ was \texttt{None}.
+
+Just as with tuples and lists, it is often better style to use pattern matching on options.\index{pattern matching} For example, if \texttt{a} is of type \texttt{Option[T]}, then
+\begin{verbatim}
+a match {
+  case Some(t) => t
+  case None => y
+}
+\end{verbatim}
+will have the same effect as \texttt{a.getOrElse(y)}.
+
+\end{itemize}
+
+\begin{tailquote}
+As in many languages, the collections are one of the most important parts of Scala's standard library. Over the years, they have gone through several designs, attempting to maximize their flexibility and efficiency while remaining easy to use. As this is being written, another redesign effort is in progress\ldots.
+\end{tailquote}
+\begin{exercises}
+\item Evaluate the following expressions and explain what operations are being performed:
+\begin{enumerate}
+\item \verb|List(3, 1, 4) ::: List(2, 3, 5)|
+\item \verb|Set(3, 1, 4) & Set(2, 3, 5)|
+\item \verb-Set(3, 1, 4) | Set(2, 3, 5)-
+\item \verb|Set(3, 1, 4) &~ Set(2, 3, 5)|
+\item \verb|Set(3, 1, 4).subsets.toSet|
+\end{enumerate}
+
+\item For each of the following expressions, predict what the result will be, then check your prediction by evaluating it in Scala:
+\begin{enumerate}
+\item \verb|Map(1 -> 1, 2 -> 4, 3 -> 9)(2)|
+\item \verb|Map(1 -> 1, 2 -> 4, 3 -> 9)(4)|
+\item \verb|Map(1 -> 1, 2 -> 4, 3 -> 9).get(4)|
+\item \verb|Map(1 -> 1, 2 -> 4, 3 -> 9) get 2|
+\item \verb|Map(1 -> 1, 2 -> 4, 3 -> 9).keySet|
+\end{enumerate}
+
+\item Write and test a \texttt{match} expression that takes a pair of integer lists and returns the smaller of the head elements. If only one list is non-empty, return its head; if both are empty, signal an error with a call to \texttt{sys.error}. For testing purposes, you will need to use \verb|List[Int]()| to enter an empty list. Thus, you should see the following results:
+\begin{itemize}
+\item \verb|(List(1, 2), List(3, 4, 5)) match ...| produces \texttt{1};
+\item \verb|(List(1, 2), List(0, -1, 2)) match ...| produces \texttt{0};
+\item \verb|(List(1, 2), List[Int]()) match ...| produces \texttt{1};
+\item \verb|(List[Int](), List(3, 4, 5)) match ...| produces \texttt{3};
+\item \verb|(List[Int](), List[Int]()) match ...| produces an error.
+\end{itemize} 
+\end{exercises}
+
+\section{Control Structures}
+\firstthought{As with expressions,} the control structures\index{Scala!control structures} such as \texttt{if}\index{Scala!if expression} and \texttt{while}\index{Scala!while loop} are substantially the same in Scala as in Java and C++. For example, the following code fragment works exactly the same in all three languages (assuming that \verb|n| has been declared as a \verb|var|):
+\begin{verbatim}
+while (n != 1) {
+  if (n % 2 == 0) {
+    // n is even
+    n = n / 2;
+  } else {
+    // n is odd
+    n = 3 * n + 1;
+  }
+}
+\end{verbatim}
+One minor difference already noted is that Scala doesn't require the semicolons at the end of each simple statement, although they are allowed. A more significant innovation is that statements and control structures all produce values, so they may be used in expressions. The \texttt{while} loop only produces the value \texttt{()} of type \texttt{Unit}, so that isn't particularly useful. However, as we have seen, the \texttt{if} statement evaluates to one of its two branches, depending on the test, so the above code may also be written
+\begin{verbatim}
+while (n != 1) {
+  n = if (n % 2 == 0) n / 2
+      else 3 * n + 1
+}
+\end{verbatim}
+
+In a block of code\index{Scala!block} surrounded by braces, the value produced is the value of the final expression. For example,
+\begin{verbatim}
+x = {
+  while (j != 0) {
+    val temp = j
+    j = i % j
+    i = temp
+  }
+  i
+}
+\end{verbatim}
+The value eventually assigned to \texttt{x} is the final value of \texttt{i}, after some number of times through the loop (in fact, this code assigns the GCD of \texttt{i} and \texttt{j} to \texttt{x}). There \emph{is} a \texttt{return} statement\index{Scala!return statement} in Scala, which breaks out of a block and returns a value from the enclosing function, but it is generally used only when the normal program flow must be altered, preventing control from reaching the end of the block.
+
+Scala does \emph{not} provide the same \texttt{for} loop as its predecessors. Part of the reason for this is that it discourages writing code that relies on modifying, or ``mutating,''\index{immutability} values bound to variables (Scala doesn't even provide the operator \texttt{++}, which is found so frequently in counting-based \texttt{for} loops, although it does support the shortcut assignment operators\index{operators!shortcut assignment} such as \texttt{+=}). More importantly, though, Scala provides a very nice generalization of the \texttt{for} loop,\index{Scala!for loop} which can iterate through many of the collection types in a uniform way. Given a collection $a$ (other than a tuple), the statement \texttt{for \{$x$ <- $a$\} $b$} will execute the body $b$ once for each value $x$ taken from $a$. The expression \texttt{$x$ <- $a$} is called a ``generator.''\index{generator} For example,
+\begin{verbatim}
+for {n <- List(3, 1, 4, 1, 5)} {
+  println(n)
+}
+\end{verbatim}
+produces the output
+\begin{verbatim}
+3
+1
+4
+1
+5
+\end{verbatim}
+The typical C++ or Java counting loop, written as \texttt{for (i = 0; i < N; i++)}, becomes \texttt{for \{i <- 0 until N\}}. The expression \texttt{0 until N} produces a ``range''\index{range} collection, which is a sequence where the successive values differ only by a step value; by saying \texttt{until}, the range excludes the final value, \texttt{N}; inclusive ranges are possible with the \texttt{to} operator: \texttt{1 to 3} is the sequence 1, 2, 3. The \texttt{by} operator can be used to get a step other than 1: \texttt{10 to 1 by -1} is the range that counts from 10 down to 1. The value returned from this form of the \texttt{for} loop is \texttt{()}, just as with \texttt{while}.
+
+The \verb|while| loop expects its test to \emph{not} be referentially transparent\index{referential transparency}---if it always returned the same value then the loop would not work---so it is decidedly not a functional construct. The \verb|for| loop above (often called the ``\verb|for|-each'' loop) is also non-functional, because the loop body must perform some side-effect\index{side-effect} (such as output) for each element in the collection.
+
+A purely functional generalization of the \texttt{for} loop, sometimes called a ``\texttt{for} comprehension,''\index{Scala!for comprehension}\index{for comprehension} can be used to construct a new collection: the expression \texttt{for \{$x$ <- $a$\} yield $b$} evaluates the expression $b$ for each element $x$ in $a$, and gathers all of the results in a collection of the same kind as $a$. For example,
+\begin{verbatim}
+for {i <- List(3, 1, 4, 1, 5)} yield i * i
+\end{verbatim}
+produces the result \texttt{List(9, 1, 16, 1, 25)}.
+
+\begin{tailquote}
+Although the \verb|while| and \verb|for|-each loops are not functional, the \verb|for| comprehension\index{for comprehension} that produces a new collection has a long history in functional programming, going back to the set-builder construct in the SETL language of the late 1960's (inspired by the corresponding notation from mathematics). More recently, several functional languages, including Scala, have extended the comprehension idea to work on a wide range of types, not just collections, that are known as ``monads.''\index{monad}
+\end{tailquote}
+\begin{exercises}
+\item Write and test a loop to print the squares of the numbers from \texttt{1} to \texttt{10}:
+\begin{center}
+\texttt{1 4 9 16 25 36 49 64 81 100}
+\end{center}
+Write it first as a \texttt{while} loop (you will need to declare a loop variable with a statement such as \verb|var i = 1|), then write it as a \texttt{for} loop. The \texttt{print} function outputs a string without advancing to the next line.
+
+\item Do the same exercise as above, but use nested loops to print a $3\times 3$ multiplication table:
+\begin{center}
+\texttt{1 2 3}\\
+\texttt{2 4 6}\\
+\texttt{3 6 9}
+\end{center}
+
+\item The generalized \texttt{for} loop has a number of additional features. For example, nested loops\index{Scala!nested loop} may be combined into a single loop with a list of generators:
+\begin{verbatim}
+for {
+  i <- Set(1, 2, 3)
+  j <- Set('a', 'b', 'c')
+} yield (i, j)
+\end{verbatim}
+There is actually a subtle difference between this and the nested version:
+\begin{verbatim}
+for {i <- Set(1, 2, 3)} yield
+  for {j <- Set('a', 'b', 'c')} yield (i, j)
+\end{verbatim}
+Try each, identify the difference, and explain which one is more useful for performing a common operation on sets.
+\end{exercises}
+
+\section{Classes}
+\firstthought{As a means to encapsulate} related fields and methods, Scala's classes\index{Scala!classes}\index{types!class} are quite similar to Java's. Perhaps the most significant difference is in the form of the constructor:\index{Scala!constructor} where Java declares a method with the same name as the class, Scala merges the constructor body with the class definition itself. This, together with other features of the language, frequently leads to a significant reduction in ``boilerplate''\index{boilerplate} code (that is, code which follows a standard, predictable pattern, and which contains very little new information). Here is an example:
+\begin{verbatim}
+// THIS IS JAVA
+public class Triangle {
+  private double base;
+  private double height;
+  private double hypotenuse;
+
+  public Triangle(double base, double height) {
+    this.base = base;
+    this.height = height;
+    this.hypotenuse = Math.sqrt(base * base + height * height);
+  }
+
+  public double getBase() {
+    return base;
+  }
+
+  public double getHeight() {
+    return height;
+  }
+
+  public double getHypotenuse() {
+    return hypotenuse;
+  }
+}
+\end{verbatim}
+In Scala, this would typically be written as follows:
+\begin{verbatim}
+class Triangle(val base: Double, val height: Double) {
+  val hypotenuse = math.sqrt(base * base + height * height)
+}
+\end{verbatim}
+The class definition\index{Scala!class definition} header includes the constructor parameters \texttt{base} and \texttt{height}; by making them \texttt{val}s, they will be retained and exposed as read-only fields of the object. The declarations in the body of the object are evaluated with the actual arguments bound to these parameters, so when the field \texttt{hypotenuse} is declared, it will be initialized with the appropriate value. Finally, because we have declared three \texttt{val} fields, there is no need for the getter methods which are so common in Java code; since a \texttt{val} is immutable,\index{immutability} we do not have to worry about other code changing these fields and it is safe to make them public (which is the default in Scala).
+
+An instance of the \texttt{Triangle} class is created just as in Java: \texttt{val t = new Triangle(3.0, 4.0)} instantiates the class with the given constructor arguments, producing a \texttt{Triangle} object. Accessing \texttt{t.hypotenuse} results in \texttt{5.0} (and \texttt{t.base} is \texttt{3.0}, \textit{etc}.).
+
+One aspect of a Scala class that is significantly different from Java is the notion of a static member.\index{static member} In Java, static members are shared among all instances of the class. Scala does not use this concept; instead, it has the notion of a ``companion object.''\index{Scala!companion object} First of all, Scala supports the definition of ``one-off'' objects---singletons,\index{singleton} which are the only instance of their class. An example of this is the \texttt{math} object, which we may imagine being defined as follows:
+\begin{verbatim}
+object math {
+  def max(a: Double, b: Double): Double = if (a > b) a else b
+  def sqrt(x: Double): Double = ...
+  ...
+}
+\end{verbatim}
+This directly declares an object with the given methods; there is no need to instantiate it, because there will never be more than the one \texttt{math} object. In Java, this corresponds to the \texttt{Math} class having only static members, which are called through the class name (\texttt{Math.sqrt}) rather than through an instance. For this use, the object may be thought of as a ``module''\index{module}---a package of related definitions grouped under an enclosing name. If the bindings in a module are used frequently in a section of code, they may be imported with a statement such as \texttt{import math.\_}.\index{Scala!import statement}\index{_@\_}\footnote{In Java, this is equivalent to writing \texttt{import static Math.*} at the top of a file, although Scala also allows imports that are local to an individual block\index{Scala!block} of code.}
+
+Now suppose we want to have a class of objects with a shared static member. A common example of this is a ``factory''\index{factory method} method: a method that hides the details of constructing an object (perhaps because the actual object returned will belong to a subclass\index{subclass} that the client might not know about). In our \texttt{Triangle} class, suppose the Java version had the following method:
+\begin{verbatim}
+// THIS IS JAVA
+public static Triangle makeIsoceles(double base) {
+  return new Triangle(base, base);
+}
+\end{verbatim}
+In Scala, we would put this method in the ``companion''\index{Scala!companion object} of the \texttt{Triangle} class, which is an object also named \texttt{Triangle}:
+\begin{verbatim}
+object Triangle {
+  def makeIsoceles(base: Double): Triangle = new Triangle(base, base)
+}
+\end{verbatim}
+In both cases, we may call \texttt{Triangle.makeIsoceles(1.0)} to produce a new triangle with base and height both 1; the advantage in Scala is that there is a cleaner separation between the operations supported by the entire class and the operations supported by an \emph{instance} of the class.\footnote{Note that there is no ambiguity in naming both the class and its companion \texttt{Triangle}. If \texttt{t} is an object of class \texttt{Triangle}, then \texttt{t.f} is a call to a class (instance) method named \texttt{f}, while a (shared) method \texttt{g} of the companion object must be called as \texttt{Triangle.g}.}
+
+As a hybrid functional/object-oriented language, Scala has equivalents for all of Java's object-oriented features: encapsulation of methods and fields, inheritance, interfaces,  subclass polymorphism, \textit{etc}.\index{object-oriented style} We will not need much from these mechanisms, but here is an example of a class hierarchy with two subclasses:\index{subclass}
+\begin{verbatim}
+trait Shape {
+  def area: Double
+  val name: String
+  override def toString: String = s"a $name with area $area"
+}
+
+class Rectangle(val width: Double, val height: Double) extends Shape {
+  def area: Double = width * height
+  val name: String = "Rectangle"
+}
+
+class Circle(val radius: Double) extends Shape {
+  def area: Double = math.Pi * radius * radius
+  val name: String = "Circle"
+}
+\end{verbatim}
+A Scala trait\index{Scala!traits} is like an interface in Java, specifying a list of members that will be common to all of its subclasses. They may either be left ``abstract,''\index{abstract member} with no definition bound to the name in the trait, or they may have a (default) definition that will be inherited\index{inheritance} by subclasses unless they choose to override\index{override} it.\footnote{Before Java 8, interfaces were only allowed to contain abstract members, but Java has slowly been adopting some of the features of Scala.} In the example, \texttt{area} and \texttt{name} are abstract, while \texttt{toString} provides a definition (which coincidentally overrides the default definition of the \texttt{toString} method inherited from the base class \texttt{Any}---the keyword \texttt{override} is required when a default behavior is replaced).
+
+The \texttt{Rectangle} and \texttt{Circle} classes extend\index{Scala!extends}\footnote{Scala uses the keyword \texttt{extends} here to mean the same thing as the \texttt{implements} keyword in Java; there is less of a distinction in Scala between ``extending'' a class and ``implementing'' an interface, so the concepts were combined in a single keyword.} the \texttt{Shape} trait, so they may be used in any context where a \texttt{Shape} is expected. For example,
+\begin{verbatim}
+def expand(shape: Shape): String =
+  s"doubling $shape will have area ${4 * shape.area}"
+\end{verbatim}
+Here is a transcript of calling this function:
+\begin{verbatim}
+scala> val r = new Rectangle(6, 7)
+r: Rectangle = a Rectangle with area 42.0
+
+scala> expand(r)
+res1: String = doubling a Rectangle with area 42.0 will have area 168.0
+\end{verbatim}
+
+\begin{tailquote}
+The language Simula 67, developed in the mid-1960's by Ole-Johan Dahl\index{Dahl, Ole-Johan} (1931--2002) and Kristen Nygaard\index{Nygaard, Kristen} (1926--2002), introduced the concept of classes and subclasses.\index{subclass} The conception was that a class would collect the common properties of several subclasses of objects, to be used as a sort of ``prefix'' to the definition of each subclass.\end{tailquote}
+\begin{exercises}
+\item Define a class \texttt{Person} with fields \texttt{givenName}, \texttt{familyName}, and \texttt{birthYear}. Define a computed \texttt{fullName} field that contains a string in the form \verb|"Howard, Brian"| (family name first), and define a method \verb|age(year: Int)| that returns the person's age on their birthday in the given year. Try to make this class definition as short as you can, taking advantage of Scala's boilerplate-reduction features. Finally, define a function that takes two \texttt{Person} objects and returns the older person.
+
+\item Modify the definition of the \texttt{Triangle} class so that it is a subclass of \texttt{Shape}. Also extend the definition of shapes to include a function to calculate the perimeter of the shape.
+\end{exercises}
+
+\section{Algebraic Data Types}
+\firstthought{Many common types} may be defined using a general facility known as an ``algebraic data type''\index{algebraic data type}\index{types!ADT} (ADT). The sense of ``algebraic'' here is that we specify a new type by specifying its ``algebra''---a list of ways to build up and operate on values of the type (just as ordinary algebra is determined by numeric constants, variables, and arithmetic operators).
+
+Scala approaches defining an ADT through a technique that may be familiar from object-oriented programming: an interface type (a Scala trait)\index{Scala!traits} is declared, along with one or more implementing subclasses,\index{subclass} one for each different way in which a value of the type may be created, perhaps by including smaller values of the type.\index{structural recursion} However, unlike the object-oriented approach, these classes do not typically define all of the operations of the ADT as member functions. Instead, new functions acting on the ADT may be defined externally, through pattern-matching.\index{pattern matching}
+
+Consider first the shapes example from the previous section, expressed as an ADT:
+\begin{verbatim}
+sealed trait Shape
+case class Rectangle(width: Double, height: Double) extends Shape
+case class Circle(radius: Double) extends Shape
+\end{verbatim}
+There are only two algebra operations here: constructing a rectangle from its width and height, and constructing a circle from its radius. The keyword \texttt{sealed}\index{Scala!sealed} indicates that the following lines will specify \emph{all} of the ways in which values of this type may be created (unlike the situation with a Java interface, which may have new implementations supplied at any time).
+
+The keyword \texttt{case} at the front of each subclass definition tells the Scala compiler to generate some extra code to support pattern matching.\index{Scala!case classes} Because the \texttt{Shape} trait is \texttt{sealed}, the compiler will know that a pattern-match\index{pattern matching} on shapes only has to cover these two cases. The \texttt{case} keyword also tells the Scala compiler to create a factory method\index{factory method} with the name of the case class, so we may construct new objects of each class without explicitly saying ``\texttt{new},'' and it automatically overrides the \texttt{toString} method to display the class name and constructor parameters. It also turns each of the constructor parameters into \texttt{val}s, thus making them available as fields.
+
+Here is how the \texttt{area} function may be defined using pattern matching:
+\begin{verbatim}
+def area(shape: Shape): Double = shape match {
+  case Rectangle(width, height) => width * height
+  case Circle(radius) => math.Pi * radius * radius
+}
+\end{verbatim}
+
+Note the trade-off we have made here in moving from an object-oriented style to the more functional ADT style:
+\begin{itemize}
+\item In the OO version, it is easy to add new subclasses (for example, a triangle) without modifying any existing code; however, if we wanted to add a method to calculate the perimeter of shapes, we would need to add it to every single subclass.\index{object-oriented style}
+\item In the ADT version, it is easy to define new functions (such as \texttt{perimeter}) by pattern matching; however, if we wanted to add a new kind of shape we would need to update every single function (recall that the keyword \texttt{sealed} promised that there would be no additional cases).\index{functional style}
+\end{itemize}
+One of the benefits of using a hybrid OO/FP language is that this trade-off may be decided either way, depending on the anticipated needs of the problem domain. If there are only a small number of operations but an unknown number of varieties of implementing class (a canonical example is components in a user interface, where designers may add new kinds of buttons, sliders, choosers, \textit{etc}., as long as they support a small number of operations allowing them to respond to input events and to be laid out on a screen), then use the OO style. If instead it is known in advance that there are only a small number of variations in how the objects are constructed (the rest of this section will give several common examples), then the FP style will allow any number of functions to be defined over that type.
+
+A particularly simple use of an ADT is to define an ``enumerated''\index{types!enumeration} type, where there are only a small set of possible values. For example, a type for the seasons of the year may be defined as follows:
+\begin{verbatim}
+sealed trait Season
+case object Spring extends Season
+case object Summer extends Season
+case object Fall extends Season
+case object Winter extends Season
+\end{verbatim}
+In this example, rather than case classes we only need individual case objects\index{Scala!case objects}---there are only four seasons, and no need to construct any additional instances.
+
+Here is an example of using a pattern match to define a function giving the starting month (in the northern hemisphere) for each season; the return type, \texttt{Month}, is presumably another enumeration:\index{pattern matching}
+\begin{verbatim}
+def startingMonth(s: Season): Month = s match {
+  case Spring => March
+  case Summer => June
+  case Fall => September
+  case Winter => December
+}
+\end{verbatim}
+
+The canonical examples of ADTs that are built up from smaller values of the same type are lists\index{types!list} and trees\index{types!tree}: starting from empty lists or individual leaves, we may grow larger structures by adding values to the front of the list, or adding new parent nodes above some number of children.\index{structural recursion}
+
+Here is the definition of the algebraic data type of expression trees, which are either leaves with a numeric value or nodes with an operator\footnote{Here we use a \texttt{String} to name the operator, but it could also have been an enumeration.} and two expression trees as operands:
+\begin{verbatim}
+sealed trait Expr
+case class Leaf(value: Double) extends Expr
+case class Node(op: String, left: Expr, right: Expr) extends Expr
+\end{verbatim}
+The effect of this is that we may construct an expression tree by writing code such as \texttt{Node("+", Leaf(27), Node("*", Leaf(3), Leaf(5)))}, and we may use pattern matching to pull a tree back apart:\index{pattern matching}
+\begin{verbatim}
+def eval(e: Expr): Double = e match {
+  case Leaf(v) => v
+  case Node("+", left, right) => eval(left) + eval(right)
+  case Node("-", left, right) => eval(left) - eval(right)
+  case Node("*", left, right) => eval(left) * eval(right)
+  case Node("/", left, right) => eval(left) / eval(right)
+  case Node(op, _, _) => sys.error("Invalid operator: " + op)
+}
+\end{verbatim}
+The \texttt{sys.error} function is used to throw an exception with the given message in case the operator string is not recognized. Here is a trace\index{substitution model} of the execution of this function:
+\begin{verbatim}
+eval(Node("+", Leaf(27), Node("*", Leaf(3), Leaf(5))))
+= eval(Leaf(27)) + eval(Node("*", Leaf(3), Leaf(5)))
+= 27 + (eval(Leaf(3)) * eval(Leaf(5)))
+= 27 + (3 * 5)
+= 27 + 15
+= 42
+\end{verbatim}
+
+Now we can see that the standard list type is also an algebraic data type. We could define our own version as follows (specialized to integers for simplicity):
+\begin{verbatim}
+sealed trait MyList
+case object Nil extends MyList
+case class Cons(head: Int, tail: MyList) extends MyList
+\end{verbatim}
+Here we see a mixture of case classes and objects: there will only ever be the one empty list (it doesn't contain any data, so there is no reason not to reuse it for every list), so \texttt{Nil} is defined as a singleton object\index{singleton}. However, each instance of \texttt{Cons} will have its own values for \texttt{head} and \texttt{tail}, so it must be a class of objects.
+
+The real definition of the Scala list type involves a parameterized type in place of \texttt{Int}, plus some operator magic to allow the \texttt{Cons} operation to be called \texttt{::}, but the above is the essence of its definition.
+
+The final point to emphasize about the \texttt{Expr} and \texttt{MyList} algebraic data types is that they are constructed recursively, and the natural way to define functions over them is to follow that recursion;\index{structural recursion} each case class generally turns into a case in a match expression, with recursive calls corresponding to the places where smaller structures are included. The natural way to prove anything about such a type is to use structural induction,\index{induction!structural} where the base cases handle the simple constructors and the induction steps are for the compound constructors that build on smaller values. In a sense, all of these notions are equivalent ways of looking at the same thing.
+
+\begin{tailquote}
+Two languages developed at the University of Edinburgh in the 1970's, NPL (New Programming Language) and its better-known successor Hope, marked the first occurrence of algebraic data types, including a corresponding pattern-matching construct.\index{pattern matching} Earlier functional languages, such as LISP, generally only included a single compound type (usually a version of lists) and used it to encode all other data types.
+\end{tailquote}
+\begin{exercises}
+\item Define an ADT that is equivalent to the type \verb|Option[Int]|. That is, you should have a trait named \verb|IntOption|, extended by a case class \verb|SomeInt|, with an appropriate field, and a case object \verb|NoInt|. Write a function \verb|getOrElse(a, y)| where it returns the contained integer \verb|n| if \verb|a| is \verb|SomeInt(n)|, and it returns \verb|y| if \verb|a| is \verb|NoInt|.
+
+\item Give a definition for the \texttt{perimeter} function on the \texttt{Shape} ADT, and then modify the ADT and the \texttt{area} and \texttt{perimeter} functions to add a case for right triangles (specified by giving their base and height).
+
+\item Define a function on expression trees that counts the number of leaves. That is, the function call
+\begin{verbatim}
+numLeaves(Node("+", Leaf(27), Node("*", Leaf(3), Leaf(5))))
+\end{verbatim}
+should return \texttt{3}. \textit{Hint:} Define it using a pattern match.
+\end{exercises}
+
+\section{Function Values}\label{sec:fval}
+\firstthought{Since functional programming} focuses on functions,\index{functional style} one of the most important types of value is the function.\index{types!function} A function that takes an argument of type $A$ and returns a result of type $B$ will have the type \texttt{$A$ => $B$}.\index{Scala!functions} More generally, the type of functions that take a sequence of parameters of types $A_0$, $A_1$, \ldots, and return type $B$ is written \texttt{($A_0$, $A_1$, \ldots)\ => B}.\footnote{Unfortunately, for historical reasons, this is not the same as a function taking a tuple\index{Scala!tuple} argument; that type is \texttt{(($A_0$, $A_1$, \ldots))\ => B}.}
+
+Strictly speaking, the functions described in previous sections are really methods of some object, although exactly which object that is might be hidden by the context in which we are executing our code. As a functional language, Scala also supports true, ``first-class,'' function\index{function!first-class} values, which may be passed around, bound to variables, \textit{etc}.\footnote{In fact, a function value of type \texttt{A => B} is implemented as an object of a class extending \texttt{Function1[A, B]}, with an \texttt{apply} method taking an argument of type \texttt{A} and returning type \texttt{B}.} These are introduced with syntax of the form \texttt{($a_0$:\ $A_0$, $a_1$:\ $A_1$, \ldots)\ => $b$},\index{=>@\texttt{=>}} which describes an ``anonymous function'' with parameters $a_i$ of type $A_i$ and function body $b$. For example, \texttt{(n:\ Int)\ => n * n} is a function which takes an integer and returns its square. Binding it to a variable, as follows, produces essentially the same effect as a named function declaration:
+\begin{verbatim}
+val square = (n: Int) => n * n
+square(4) // yields 16
+\end{verbatim}
+To use a method, such as \verb|def f(...) = ...|, as a function value, follow its name with an underscore: \verb|f _|.\index{_@\_}
+
+When a function takes another function as a parameter, it is said to be a ``higher-order''\index{function!higher-order} function. Here are several examples:
+\begin{itemize}
+\item \textbf{Map}\index{function!map}: If \verb|f: Int => Int| is a function on integers, then we may apply it to each of the elements of an integer list to get another integer list of the same length. The \verb|List[Int]| class defines this as the \verb|map| method:
+\begin{verbatim}
+List(a, b, c).map(f) == List(f(a), f(b), f(c))
+\end{verbatim}
+
+\item \textbf{Filter}\index{function!filter}: If \verb|p: Int => Boolean| is a ``predicate''\index{predicate} function on integers---that is, it takes an integer $n$ and returns \verb|true| or \verb|false| to tell whether $n$ ``satisfies'' the predicate---then we may apply it to each of the elements of an integer list and produce a resulting list of only those integers that satisfy the predicate. The \verb|List[Int]| class defines this as the \verb|filter| method:
+\begin{verbatim}
+List(a, b, c).filter(f) = List(a, c)
+\end{verbatim}
+(supposing that \verb|p(a) == p(c) == true| and \verb|p(b) == false|).
+
+\item \textbf{Reduce}\index{function!reduce}: If \verb|f: (Int, Int) => Int| is a function that combines two integers into one, then we may use it to combine an entire list of integers into a single result in several ways. The \verb|List[Int]| class defines a \verb|reduceLeft| method that works as follows:
+\begin{verbatim}
+List(a, b, c, d).reduceLeft(f) = f(f(f(a, b), c), d)
+\end{verbatim}
+
+\item \textbf{Function composition}\index{function!compose}: If \verb|f: Int => Int| and \verb|g: Int => Int| are functions on integers, then we may define the function \verb|compose| such that \verb|compose(f, g)| is the function that takes an integer $n$ and returns \texttt{f(g($n$))}:
+\begin{verbatim}
+def compose(f: Int => Int, g: Int => Int): Int => Int =
+  (n: Int) => f(g(n))
+\end{verbatim}
+Note that this example not only takes function arguments, it also returns a function value as its result.
+
+\item \textbf{Currying}\index{function!curried}: If \verb|f: (Int, Int) => Int| is a function that takes two integers and returns another, then the operation of ``currying''\footnote{Named for the logician Haskell Curry\index{Curry, Haskell}, who popularized the technique.} will turn this into a function that takes a single integer and returns a new function that expects to be given the second integer, whereupon it will use those two integers to compute the result according to the original function \verb|f|. Here is an implementation:
+\begin{verbatim}
+def curry(f: (Int, Int) => Int): Int => (Int => Int) =
+  (a: Int) => ((b: Int) => f(a, b))
+\end{verbatim}
+One advantage of this operation is that we can apply \verb|curry(f)| to a single value, say $n$, producing a new function that is \verb|f| ``partially applied''\index{partial application} to $n$ in the first argument. This gives us a specialized version of \verb|f|, ready perhaps to be mapped or filtered over a list. For example, consider the function
+\begin{verbatim}
+def plus(x: Int, y: Int): Int = x + y
+\end{verbatim}
+Then \verb|curry(plus)(1)| will be a new function that takes an integer and returns one plus that integer:
+\begin{verbatim}
+val succ = curry(plus)(1)
+List(1, 2, 3).map(succ)  // produces List(2, 3, 4)
+\end{verbatim}
+
+Scala provides another way of creating a partially applied function.\index{partial application} Given \verb|f: (Int, Int) => Int|, the notation \verb|f(1, _: Int)|\index{_@\_} is the same as \verb|(n: Int) => f(1, n)|, while \verb|f(_: Int, 2)| means \verb|(n: Int) => f(n, 2)|.\footnote{The type annotations are optional in cases where there is enough context for the compiler to infer them.}
+
+\item \textbf{Thunks and Call-By-Name Parameters}\index{thunk}\index{Scala!call-by-name}: A function that takes \emph{no} parameters is sometimes called a ``thunk.''\footnote{The term was coined by P.Z. Ingerman in 1961 at the University of Pennsylvania; it referred to a piece of code generated when compiling certain features of Algol-60---the code when executed provided a uniform way of computing an address corresponding to a passed parameter. The name is meant to suggest a thing that had ``already been thought of'' and was just being passed around until needed; ``thunk'' is therefore the past-tense of ``think,'' at least at the early hour of the morning when Ingerman thunk it up.} It represents a piece of code that has not yet been evaluated, but which does not need any more information before it can proceed. If the function is referentially transparent\index{referential transparency}, then it should produce the same result whenever it is evaluated; however, there is an important side-effect\index{side-effect} that we have been ignoring: executing code takes processor time. A thunk is a useful way to pass an expensive calculation that might not be needed.
+
+Consider trying to write a function that behaves like the \texttt{if} expression:
+\begin{verbatim}
+def myIf(test: Boolean, trueBranch: Int, falseBranch: Int): Int = test match {
+  case true => trueBranch
+  case false => falseBranch
+}
+... myIf(someTest, trueBranchCalculation, falseBranchCalculation) ...
+\end{verbatim}
+When this is called in Scala, both branches will be evaluated before passing them to \texttt{myIf}; Scala is said to pass parameters ``by value,'' that is, it evaluates each argument before evaluating the function body. Only one of the branches will actually be used here, so any effort spent evaluating the other branch will be wasted.
+
+Here is an alternate version using thunks and anonymous functions:
+\begin{verbatim}
+def myIf(test: Boolean, trueBranch: () => Int, falseBranch: () => Int): Int = test match {
+  case true => trueBranch()
+  case false => falseBranch()
+}
+... myIf(someTest, () => trueBranchCalculation, () => falseBranchCalculation) ...
+\end{verbatim}
+Now the branches are passed as unevaluated thunks, and only the needed branch will be executed. This is such a useful technique that Scala has a short way of expressing it:
+\begin{verbatim}
+def myIf(test: Boolean, trueBranch: => Int, falseBranch: => Int): Int = test match {
+  case true => trueBranch
+  case false => falseBranch
+}
+... myIf(someTest, trueBranchCalculation, falseBranchCalculation) ...
+\end{verbatim}
+The types of the two branches are now \verb|=> Int| instead of just \texttt{Int}, indicating that they are passed ``by name'' instead of by value. Whenever the \texttt{myIf} function is called, the by-name arguments will be automatically wrapped in thunks, and a thunk will only be evaluated if the corresponding parameter is needed in the function body (however, some care is still required: the thunk will be evaluated \emph{each} time the parameter is used, so this doesn't solve the complementary problem of an argument being calculated more than once).
+\end{itemize}
+
+All of the examples above used the \verb|Int| type for arguments, but almost all of them would have worked equally well for other types. The next section will revisit some of these examples in a more general form.
+
+\begin{tailquote}
+The map and reduce operations are the basis of the MapReduce\index{MapReduce} framework, used by Google to apply an operation (map)\index{function!map} to each of billions of web pages distributed across a server farm and collect up a summary of the results (reduce)\index{function!reduce}. The success of this framework is partially responsible for the surge of interest in functional programming in the past decade.\index{functional style}
+\end{tailquote}
+\begin{exercises}
+\item Give definitions for stand-alone versions of the \verb|map|, \verb|filter|, and \verb|reduceLeft| functions:
+\begin{itemize}
+\item \verb|def map(f: Int => Int, xs: List[Int]): List[Int] =|
+\item \verb|def filter(p: Int => Boolean, xs: List[Int]): List[Int] =|
+\item \verb|def reduceLeft(f: (Int, Int) => Int, xs: List[Int]): Int =|
+\end{itemize}
+
+\item Define a function \verb|repeat(f, n)| that takes a function value \verb|f: Int => Int| and a non-negative integer \verb|n|, and returns a new function on \verb|Int| that is the \verb|n|-fold application of \verb|f|. For example, if \verb|succ(n) = n + 1|, then \verb|repeat(3, succ)| should be a function that adds three to its argument:
+\begin{verbatim}
+repeat(3, succ)(n) = succ(succ(succ(n))) = n + 3
+\end{verbatim}
+When \verb|n| is zero, the result should be the identity function:
+\begin{verbatim}
+repeat(0, f)(n) = n
+\end{verbatim}
+for any \verb|f| and \verb|n|.
+
+\item We may simulate some of the benefits of programming with higher-order functions as follows:\index{function!higher-order}\index{MapReduce}
+\begin{itemize}
+\item Define a function value \verb|mapFun: Int => Int| that takes an \texttt{Int} and performs some time-consuming computation on it (for example, convert it to a string and then add up the character codes of each of the digits in the string);
+\item Define a function value \verb|redFun: (Int, Int) => Int| that takes two \texttt{Int} arguments and computes a new \texttt{Int} (for example, add them or find their maximum);
+\item Create a large range of integers, for example, \texttt{val nums = 1 to 1000000};
+\item Apply \texttt{mapFun} to each of the numbers in the range, and then use \texttt{redFun} to combine the list of results down to a single number: \verb|nums.map(mapFun).reduce(redFun)|;\footnote{The \texttt{reduce} method has the same signature as \texttt{reduceLeft}, but it might perform the reduction in a different order; this relies on the reduction function being ``associative,'' so \texttt{f(f(a, b), c)} and \texttt{f(a, f(b, c))} give the same result.}
+\item Do the same, but tell Scala to do operations in parallel if possible (this simulates Google's MapReduce framework performing the mapping and reduction across a cluster of machines simultaneously): \verb|nums.par.map(mapFun).reduce(redFun)|;
+\item Examine the system clock before and after each of the previous two steps, and see whether the parallel version ran faster (if you are running on a system with multiple cores or processors, it should be faster once you account for the overhead of starting multiple tasks); use code such as the following:
+\begin{verbatim}
+val before = System.currentTimeMillis
+... put the code to be timed here ...
+val after = System.currentTimeMillis
+val duration = after - before
+\end{verbatim}
+Using call-by-name parameters, this may be wrapped in a function:
+\begin{verbatim}
+def time(body: => Int): (Int, Long) = {
+  val before = System.currentTimeMillis
+  val result = body
+  val after = System.currentTimeMillis
+  (result, after - before)
+}
+\end{verbatim}
+\end{itemize}
+\end{exercises}
+
+\section{Polymorphism}
+\firstthought{One of the key developments} in types for programming is the notion of parametric polymorphism.\index{polymorphism!parametric} The idea is that the same code can often be used for many types of data (``polymorphism'' literally means ``many forms'')---for example, a function to sort a list with respect to a given ordering function will look the same (except for the types) whether it is sorting a list of integers or strings. By passing a type as an extra parameter to the function, the code becomes parameterized, or ``generic.''\index{function!generic}\index{types!generic} Here is an example,\footnote{This is a list-based Quicksort\index{Quicksort}; see Section~\ref{sec:logbehavior}.} using the \verb|filter| method described above:
+\begin{verbatim}
+def sort[T](input: List[T], less: (T, T) => Boolean): List[T] =
+input match {
+  case Nil => Nil
+  case pivot :: rest =>
+    val small = rest.filter(less(_, pivot))
+    val large = rest.filter(!less(_, pivot))
+    sort(small, less) ::: List(pivot) ::: sort(large, less)
+}
+\end{verbatim}
+This may be called as follows:
+\begin{verbatim}
+sort(List(3, 1, 4), (m: Int, n: Int) => m < n)
+sort(List("foo", "bar", "baz"), (s: String, t: String) => s < t)
+\end{verbatim}
+
+Note that the declaration of \verb|sort| first takes a type parameter, which by convention is often called \verb|T|. This type is then used in the remaining parameters to constrain the arguments that may be passed to \verb|sort|: if the list is a \verb|List[Int]|, then the comparison function \verb|less| has to be able to compare two \verb|Int|s.
+
+We have already seen the bracketed type parameters when looking at collection types such as \texttt{List[$T$]}; just as with the constructor function for \verb|List|, we do not need to specify the type parameter when the compiler can figure it out from context: thus, we write \verb|List(1, 2)| instead of \verb|List[Int](1, 2)|, and \verb|sort(small, less)| instead of \verb|sort[T](small, less)|.
+
+Interestingly, it is often the case that a generic function offers less freedom when writing its body than a non-generic function. If you only know that an argument is of some type $T$, then you cannot perform any operation that depends on it being any specific type such as \verb|Int|. Indeed, consider the function \verb|compose| again, now parameterized:
+\begin{verbatim}
+def compose[A, B, C](f: B => C, g: A => B): A => C = ???
+\end{verbatim}
+Without knowing what \verb|A|, \verb|B|, and \verb|C| are, there is literally only one thing that can replace the \verb|???|: it has to be a function value taking an argument, say \verb|x|, of type \verb|A|:
+\begin{verbatim}
+def compose[A, B, C](f: B => C, g: A => B): A => C =
+  (x: A) => ???
+\end{verbatim}
+Now, what can go in the body of that function value? We only have \verb|f|, \verb|g|, and \verb|x| available, and the only way they can be combined to produce a result of type \verb|C| is to apply \verb|f| to the expression \verb|g(x)|:
+\begin{verbatim}
+def compose[A, B, C](f: B => C, g: A => B): A => C =
+  (x: A) => f(g(x))
+\end{verbatim}
+There is some deep mathematics here known as the parametricity\index{parametricity} theorem: under certain conditions, it can be proven that some parametric function signatures have only one possible implementation. The upshot is that, if you follow the types when writing these functions, the code is essentially guaranteed to be correct!
+
+% TODO bounded polymorphism? type classes?? Call-by-name parameters?
+\begin{tailquote}
+Scala came out of work that Martin Odersky\index{Odersky, Martin} did while designing (with others) the generic types\index{types!generic} eventually added to Java in version 5. It reflects his belief that a better design would have been possible if strict compatibility with earlier versions of Java had been relaxed.
+\end{tailquote}
+\begin{exercises}
+\item Following the example of the \verb|compose| function, develop a generic version of the \verb|curry| function from Section~\ref{sec:fval}.
+
+\item Define generic versions of the \texttt{map}, \texttt{filter}, and \texttt{reduceLeft} functions from the exercises of Section~\ref{sec:fval}.
+\end{exercises}
+
+\section{Further Reading}
+\firstthought{The authoritative source} on Scala is \textit{Programming in Scala}, by Martin Odersky\index{Odersky, Martin}, Lex Spoon\index{Spoon, Lex}, and Bill Venners\index{Venners, Bill}\cite{odersky2016pis}. An excellent (and free) introduction is \textit{Creative Scala}, by Dave Gurnell\index{Gurnell, Dave} and Noel Welsh\index{Welsh, Noel}\cite{gurnell2017cs}.
+

@@ -1,0 +1,299 @@
+% !TEX root = ../root.tex
+
+\section{Finite State Automata}
+DFA, NFA, RE. Lexical analysis, network protocol specs, string searching. Geometric (FA) vs algebraic (RE) descriptions; spaghetti vs structured code.
+\label{sec:moore}
+
+\subsection{State Machines in Scala}
+\firstthought{There are many ways to implement} the state machine concept in code. The essence is that
+the input is processed one item at a time, in order, with only a fixed amount of
+information (the ``state'') preserved from one item to the next. The iteration over the
+items may be performed by a loop or recursion; the state may be maintained explicitly
+in variables or hidden in an object, or it may be implicit in the current section of
+code being executed; the transition from one state to the next may be controlled by a
+series of conditional statements, a data structure representing the transition graph,
+or a function which encapsulates the required logic. Here are some examples:
+
+\paragraph{Strings containing the vowels in order}
+
+\firstthought{This is the example} from Section~10.2 of Aho \& Ullman. A string of lower-case letters
+will be accepted if it contains the vowels \verb|a|, \verb|e|, \verb|i|, \verb|o|, and \verb|u|, in that order
+(the vowels may occur in other positions as well, as in \verb|"sacrilegious"|). For example, it should accept \verb|"abstemious"| and \verb|"aeiou"|, but not \verb|"religious"| (there is no \verb|a|) or \verb|"undercoating"| (the vowels are in the wrong order). Here is a diagram of the state machine (Figure~10.3 of Aho \& Ullman):
+\begin{center}
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=1.5cm,semithick]
+  \node[initial,state](q0){0};
+  \node[state](q1)[right of=q0]{1};
+  \node[state](q2)[right of=q1]{2};
+  \node[state](q3)[right of=q2]{3};
+  \node[state](q4)[right of=q3]{4};
+  \node[accepting,state](q5)[right of=q4]{5};
+  
+  \path(q0) edge [loop above] node {not \texttt{a}} (q0);
+  \path(q1) edge [loop above] node {not \texttt{e}} (q1);
+  \path(q2) edge [loop above] node {not \texttt{i}} (q2);
+  \path(q3) edge [loop above] node {not \texttt{o}} (q3);
+  \path(q4) edge [loop above] node {not \texttt{u}} (q4);
+  \path(q0) edge node {\texttt{a}} (q1);
+  \path(q1) edge node {\texttt{e}} (q2);
+  \path(q2) edge node {\texttt{i}} (q3);
+  \path(q3) edge node {\texttt{o}} (q4);
+  \path(q4) edge node {\texttt{u}} (q5);
+\end{tikzpicture}
+\end{center}
+
+\newthought{Using state implicit in conditional statements:}
+Figure~\ref{fig:vowelsimplicit} gives a Scala version of Figure~10.2 from Aho \& Ullman. Calling the \verb|testWord| function should return \verb|true| if its argument is accepted, and \verb|false| if not.
+\begin{figure}
+\begin{verbatim}
+def testWord(word: String): Boolean = {
+  var index = 0
+  
+  /**
+   * Advance index through the characters of word until either
+   * c is found (return true; index points at character after c), or
+   * the end of the string is reached (return false).
+   */
+  def findChar(c: Char): Boolean = {
+    while (index < word.length && word(index) != c) {
+      index += 1
+    }
+    
+    if (index == word.length) {
+      false
+    } else {
+      index += 1
+      true
+    }
+  }
+  
+  // state 0
+  if (findChar('a'))
+    // state 1
+    if (findChar('e'))
+      // state 2
+      if (findChar('i'))
+        // state 3
+        if (findChar('o'))
+          // state 4
+          if (findChar('u'))
+            // state 5
+            return true
+  // error state
+  false
+}
+\end{verbatim}
+\caption{Scala code to search for vowels in order using state implicit in conditionals}
+\label{fig:vowelsimplicit}
+\end{figure}
+
+The input is processed in this example by the \verb|while| loop in the \verb|findChar|
+function; the variable \verb|index| is used to step through the characters in the word.
+The current ``state'' is reflected in how far the execution has progressed through
+the nested \verb|if| statements in \verb|testWord|; after reading characters for a while in
+state 0, it transitions to state 1 when the first \verb|a| is seen, then to state 2 upon
+seeing a following \verb|e|, \textit{etc}. If any of the calls to \verb|findChar| return \verb|false|, meaning
+the end of the string has been reached while looking for one of the vowels, then the
+machine enters an error state. If all of the calls to \verb|findChar| succeed, then the
+machine reaches state 5 and immediately returns \verb|true| (without looking at the rest
+of the string).
+
+\newthought{Using integer state with transitions in a graph:}
+Figure~\ref{fig:vowelsinteger} is the same state machine, with the state explicitly represented by an integer
+in the range 0 to 5. The transitions are stored in an array of maps: \verb|trans(i)| is the
+map, for state \verb|i|, from the current character to the next state. Each of the maps in
+this case is particularly simple, since at most one edge leads away from each state
+to another; Scala allows a map to have a ``default value,'' so that any transition not
+explicitly specified will go to that default state (here, remaining in the same
+state). See below for other examples using more complicated graphs.
+\begin{figure}
+\begin{verbatim}
+val trans = Array[Map[Char, Int]](
+  Map('a' -> 1) withDefaultValue 0, // state 0
+  Map('e' -> 2) withDefaultValue 1, // state 1
+  Map('i' -> 3) withDefaultValue 2, // state 2
+  Map('o' -> 4) withDefaultValue 3, // state 3
+  Map('u' -> 5) withDefaultValue 4, // state 4
+  Map() withDefaultValue 5 // state 5
+)
+
+def testWord(word: String): Boolean = {
+  var state = 0 // initial state
+  for (c <- word) {
+    state = trans(state)(c)
+  }
+  state == 5 // returns true if accepting state reached
+}
+\end{verbatim}
+\caption{Scala code to search for vowels in order using integer state and maps}
+\label{fig:vowelsinteger}
+\end{figure}
+
+\newthought{Using object-oriented state and transitions:}
+Instead of assigning arbitrary numbers to the states, and collecting all of the
+transition information into a global graph data structure, Figure~\ref{fig:vowelsobjects} shows a more object-oriented
+approach that associates an object with each state.
+\begin{figure}
+\begin{verbatim}
+object testWord {
+  trait State {
+    def trans(c: Char): State
+    def accept: Boolean = false // override to identify final state
+  }
+
+  object InitialState extends State {
+    def trans(c: Char) = if (c == 'a') AState else InitialState
+  }
+
+  object AState extends State {
+    def trans(c: Char) = if (c == 'e') AEState else AState
+  }
+
+  object AEState extends State {
+    def trans(c: Char) = if (c == 'i') AEIState else AEState
+  }
+
+  object AEIState extends State {
+    def trans(c: Char) = if (c == 'o') AEIOState else AEIState
+  }
+
+  object AEIOState extends State {
+    def trans(c: Char) = if (c == 'u') AEIOUState else AEIOState
+  }
+
+  object AEIOUState extends State {
+    def trans(c: Char) = AEIOUState
+    override def accept = true
+  }
+
+  def apply(word: String): Boolean = {
+    var state: State = InitialState
+    for (c <- word) {
+      state = state.trans(c)
+    }
+    state.accept
+  }
+}
+\end{verbatim}
+\caption{Scala code to search for vowels in order using object-oriented state}
+\label{fig:vowelsobjects}
+\end{figure}
+
+\paragraph{Vending Machine}
+
+\firstthought{Suppose we want to model} a vending machine which accepts nickels, dimes, and quarters,
+and dispenses a piece of candy when 25 cents has been deposited. If more than 25 cents
+is put in (for example, three dimes), then after dispensing the candy the remaining
+amount is applied toward the next transaction (that is, it doesn't give any change).
+One difference in this machine is that each edge in the graph will
+give not only a new state but also an indication of whether candy was given out on
+the transition (technically, this is known as a ``Mealy Machine''). There is no accepting state, since the machine will keep
+running as long as there is input; in the code below, we will print \verb|"Candy!"|
+whenever it produces a piece of candy. For example, when the input is \verb|"NNNNQDNND"|,
+the output should be to print \verb|"Candy!"| three times. Here is the state diagram, where a transition labelled \texttt{c}/\0 means the input is coin \texttt{c} and no candy is output, while \texttt{c}/\1 means you get candy:
+\begin{center}
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,semithick]
+  \node[initial,state](q0){0\textcent};
+  \node[state](q5)[above right=1cm and 2cm of q0]{5\textcent};
+  \node[state](q10)[right=4cm of q0]{10\textcent};
+  \node[state](q15)[below right=1.7cm and 3.3cm of q0]{15\textcent};
+  \node[state](q20)[below right=1.7cm and 0.7cm of q0]{20\textcent};
+  
+  \path(q0) edge node [sloped,pos=0.7] {\texttt{N}/\0} (q5)
+            edge node [sloped,pos=0.25] {\texttt{D}/\0} (q10)
+            edge [loop above] node {\texttt{Q}/\1} (q0);
+  \path(q5) edge node [sloped,pos=0.3] {\texttt{N}/\0} (q10)
+            edge node [sloped,pos=0.15] {\texttt{D}/\0} (q15)
+            edge [loop above] node {\texttt{Q}/\1} (q5);
+  \path(q10) edge node [sloped,pos=0.7] {\texttt{N}/\0} (q15)
+            edge node [sloped,pos=0.3] {\texttt{D}/\0} (q20)
+            edge [loop above] node {\texttt{Q}/\1} (q10);
+  \path(q15) edge node [sloped] {\texttt{N}/\0} (q20)
+            edge node [sloped,pos=0.1] {\texttt{D}/\1} (q0)
+            edge [loop below] node {\texttt{Q}/\1} (q15);
+  \path(q20) edge node [sloped,pos=0.3] {\texttt{N}/\1} (q0)
+            edge node [sloped,pos=0.3] {\texttt{D}/\1} (q5)
+            edge [loop below] node {\texttt{Q}/\1} (q20);
+\end{tikzpicture}
+\end{center}
+
+\newthought{Using integer state with transitions in a graph:}
+We will adopt a similar solution as for the second version of the vowel problem. This
+time, the integer state numbers will be more meaningful: they will be 0, 5, 10, 15,
+and 20, representing the amount of money which has been deposited so far. Since these
+are not consecutive, the graph will be represented by a map of maps instead of an
+array of maps. Also, there will be no need for default transitions, since each of the
+three possible inputs (\verb|N|, \verb|D|, or \verb|Q|, for nickel, dime, and quarter) will cause a
+different change of state. Finally, the value of the map for each input will be a pair of the next state
+and a Boolean indicating whether a piece of candy should be output. The code is shown in Figure~\ref{fig:vendinginteger}.
+\begin{figure}
+\begin{verbatim}
+val vtrans = Map[Int, Map[Char, (Int, Boolean)]](
+   0 -> Map('N' ->  (5, false),
+            'D' -> (10, false),
+            'Q' -> (0, true)),
+   5 -> Map('N' -> (10, false),
+            'D' -> (15, false),
+            'Q' -> (5, true)),
+  10 -> Map('N' -> (15, false),
+            'D' -> (20, false),
+            'Q' -> (10, true)),
+  15 -> Map('N' -> (20, false),
+            'D' ->  (0, true), 
+            'Q' -> (15, true)),
+  20 -> Map('N' ->  (0, true),
+            'D' ->  (5, true),
+            'Q' -> (20, true))
+)
+
+def vend(input: String) {
+  var state = 0 // initial state
+  for (coin <- input) {
+    val (newState, candy) = vtrans(state)(coin)
+    if (candy) println("Candy!")
+    state = newState
+  }
+}
+\end{verbatim}
+\caption{Scala code to simulate a vending machine using integer state and maps}
+\label{fig:vendinginteger}
+\end{figure}
+
+\newthought{Using an object-oriented approach with encapsulated state:}
+Instead of exposing an explicit state, we can wrap it up inside an object with
+(mutable) internal state. Figure~\ref{fig:vendingobject} is another approach to the vending machine, which also
+replaces the discrete transition graph with a calculated transition function.
+\begin{figure}
+\begin{verbatim}
+class VendingMachine(price: Int) {
+  private var balance = 0
+  
+  /**
+   * Insert the given amount of money;
+   * returns true if an item is vended.
+   */
+  def deposit(amount: Int): Boolean = {
+    balance += amount
+    if (balance >= price) {
+      balance -= price
+      true
+    } else {
+      false
+    }
+  }
+}
+
+def vend(input: String) {
+  val machine = new VendingMachine(25)
+  for (coin <- input) {
+    val candy = coin match {
+      case 'N' => machine.deposit(5)
+      case 'D' => machine.deposit(10)
+      case 'Q' => machine.deposit(25)
+    }
+    if (candy) println("Candy!")
+  }
+}
+\end{verbatim}
+\caption{Scala code to simulate a vending machine using object-oriented state}
+\label{fig:vendinginteger}
+\end{figure}

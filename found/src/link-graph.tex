@@ -1,0 +1,13 @@
+% !TEX root = ../root.tex
+
+\section{Graphs}
+Graph representations.
+DFS (forest): cycle or topological order. BFS: shortest path, Dijkstra \&\ Prim. Floyd/Warshall on adjacency matrix. PERT charts. Call tree, series-parallel graph (for scheduling).
+
+Proof that DFS gives topological order if no back edges: if node $A$ has an edge to node $B$, then while $A$ is being processed we will have one of the following cases:
+\begin{itemize}
+\item $B$ is not yet visited: the edge from $A$ to $B$ is a tree edge, and $B$ must be finished before $A$;
+\item $B$ is already visited and finished: the edge from $A$ to $B$ is either a forward or cross edge, and $A$ will necessarily be finished after $B$;
+\item $B$ is visited but not yet finished: the edge from $A$ to $B$ is a back edge, contradicting the assumption of no back edges.
+\end{itemize}
+So, if there are no back edges, then $A$ will always be finished after $B$. Therefore, listing the nodes in reverse finishing order will put $A$ before $B$, respecting the direction of the edge from $A$ to $B$ in the graph.

@@ -1,0 +1,340 @@
+% !TEX root = ../root.tex
+
+\section{Boolean Operations}
+\subsection{Basic Operators}\label{basicop}
+\firstthought{When we talk about how a computer works,} it is rarely necessary to go below the level of digital logic. Electrical engineers may go deeper and talk about current and voltage levels, and the behavior of circuits made up of devices such as resistors and transistors; physicists go deeper still and talk about the laws of electromagnetism and quantum mechanics to explain the operation of those devices. However, for the purposes of computer science, it is enough to know that an electronic digital computer is composed of a large number of switches, called ``gates,'' that are connected in such a way as to manipulate electrical signals representing individual ``bits'' of data. One voltage level is, somewhat arbitrarily, chosen to represent ``on,'' or ``true,'' or the bit \1, while another level represents ``off,'' or ``false,'' or the bit \0.
+
+At this level of abstraction, where the inputs and outputs of gates are viewed as Boolean values true/\1 and false/\0, the behavior of a gate is (almost\footnote{We will see later that it is sometimes important to also model how long it takes for a gate to switch in response to a change of input.}) completely described by giving a rule relating input to output. Some of the simplest rules are the logical operations \textsc{and}, \textsc{or}, and \textsc{not}, which are fully described by the following tables:
+\[
+\begin{array}{cc|c}
+p & q & p\engAND q\\ \hline
+\0 & \0 & \0\\
+\0 & \1 & \0\\
+\1 & \0 & \0\\
+\1 & \1 & \1
+\end{array}\qquad
+\begin{array}{cc|c}
+p & q & p\engOR q\\ \hline
+\0 & \0 & \0\\
+\0 & \1 & \1\\
+\1 & \0 & \1\\
+\1 & \1 & \1
+\end{array}\qquad
+\begin{array}{c|c}
+p & \engNOT p\\ \hline
+\0 & \1\\
+\1 & \0
+\end{array}
+\]
+As expected from their natural language counterparts, $p\engAND q$ (also called the ``conjunction'' of $p$ with $q$) is true only when both $p$ \emph{and} $q$ are true, $p\engOR q$ (also called the ``disjunction'') is true when either $p$ \emph{or} $q$ is true (or both---this is the ``inclusive'' version of \textsc{or}), and $\engNOT p$ (the ``negation'') is true exactly when $p$ is \emph{not} true. There are many different notations in use for these operations; here are some:
+\[ \begin{array}{c@{\qquad}c@{\qquad}c@{\qquad}c}
+p\engAND q & p\land q & p\verb| && |q & p\cdot q\\ \hline
+p\engOR q  & p\lor q  & p\verb- || -q & p+q\\ \hline
+\engNOT p  & \lnot p  & \verb|!|p     & \overline{p}
+\end{array} \]
+
+The operators in the second column, $\land$, $\lor$, and $\lnot$, are similar in appearance to the set operations: intersection ($\cap$), union ($\cup$), and difference ($-$). This is not a coincidence---for example, an element is in $A\cap B$ exactly when it is in both $A$ \emph{and} $B$, while saying that something is in $A-B$ means that it is in $A$ but \emph{not} in $B$.
+
+A useful intuition about the \textsc{and} operation on \0 and \1 is that it takes the \textit{minimum} of its arguments. Similarly, the \textsc{or} operation takes the \textit{maximum}.
+
+The operators in the third column, \verb|&&|, \verb-||-, and \verb|!|, should be familiar from many programming languages, including C, C++, Java, and Scala. In C, these are integer operations, using \verb|0| for false and \verb|1| for true,\footnote{In fact, any non-zero \texttt{int} will be treated as true by C.} while C++, Java, and Scala each have a distinct Boolean type with \verb|true| and \verb|false| values. In addition to these logical operations, all of these languages also have a related set of integer operations, known as the ``bitwise'' operators: \verb|&|, \verb-|-, and \Verb|\Tilde|. As their name implies, these work at the level of the individual bit positions in the internal binary representation of integers. For example, \verb|107 & 58| is \verb|42|:
+\begin{center}\begin{tabular}{c}
+\verb| 107 = 01101011| \\
+\verb|& 58 = 00111010| \\ \hline
+\verb|  42 = 00101010|
+\end{tabular}\end{center}
+
+These languages descended from C have one more bitwise logical operator: \Verb|a \Caret b| takes the ``exclusive-\textsc{or}'' at each corresponding bit position of \verb|a| and \verb|b|. The exclusive-\textsc{or}, also written $p\engXOR q$, or $p\oplus q$, is the variation of \textsc{or} that is true when either $p$ or $q$ is true, but not both; it has the following truth table:
+\[
+\begin{array}{cc|c}
+p & q & p\engXOR q\\ \hline
+\0 & \0 & \0\\
+\0 & \1 & \1\\
+\1 & \0 & \1\\
+\1 & \1 & \0
+\end{array}
+\]
+
+The bitwise operators are useful when performing low-level bit manipulation, such as when writing code that interfaces with hardware devices. A binary number may be interpreted as a ``bit mask,'' where each \verb|1| bit selects its bit position. For example, the mask \verb|01010000| selects the 64's place and the 16's place. One way to produce such a mask is to use another bit operator: the ``shift'' (\verb|<<|). The expression \verb|x << k| results in \verb|x| being shifted \verb|k| bits to the left, with bits of \verb|0| pushed in from the right (effectively multiplying by $2^k$). Since $64=2^6$ and $16=2^4$, the above mask may be produced by \verb-1 << 6 | 1 << 4-.
+
+Using a mask \verb|m|, the following simple operations are possible on a binary number \verb|x|:
+\begin{itemize}
+\item \verb-x | m- turns on (sets to \verb|1|) all of the selected bits of \verb|x|, leaving the rest unchanged;
+\item \Verb|x & {\Tilde}m| turns off all of the selected bits of \verb|x|;
+\item \verb|x & m| turns off all of the \emph{un}selected bits of \verb|x|;
+\item \Verb|x \Caret m| ``toggles'' (flips between \verb|0| and \verb|1|) all of the selected bits of \verb|x|;
+\item \Verb|{\Tilde}x| toggles all of the bits of \verb|x|.
+\end{itemize}
+The following table shows samples of these operations:
+\begin{center}\begin{tabular}{rl}
+\verb|x|:             & \verb|01101011|\\
+\verb|m|:             & \verb|01010000|\\ \hline
+\verb-x | m-:         & \verb|01111011|\\
+\Verb|x & {\Tilde}m|: & \verb|00101011|\\
+\verb|x & m|:         & \verb|01000000|\\
+\Verb|x \Caret m|:    & \verb|00111011|\\
+\Verb|{\Tilde}x|:     & \verb|10010100|
+\end{tabular}\end{center}
+
+The operators in the final column ($p\cdot q$, $p+q$, and $\overline{p}$) are meant to look like the familiar arithmetic operations of multiplication and addition. These exploit the connection that, when restricted to the numbers \0 and \1, multiplication behaves just like \textsc{and}, and addition is almost like \textsc{or} (with the modification that $\1 + \1$ must be \1, to stay within the allowed range). This notation has two advantages: \textit{(i)} it is quite compact, particularly when dealing with terms in ``Disjunctive Normal Form'' (see below), and \textit{(ii)} it enables us to use many of our intuitions from arithmetic when working with logical expressions. We will use this version in most of what follows. As in algebra, we will often omit the dot ($\cdot$) for multiplication.
+
+\begin{tailquote}
+Computer Science is messed up: with Booleans, $\1+\1=\1$; with binary numbers, $\1+\1=\1\0$; and with strings, $\1+\1=\1\1$!
+\end{tailquote}
+
+\begin{exercises}
+\item Find an operation in C-like languages that behaves like \textsc{xor}. That is, identify a common operator that takes two Boolean (\verb|true|/\verb|false|) operands and produces the value \verb|true| when exactly one of them is \verb|true|.
+
+\item\label{ex:cmpop} Investigate the behavior of the comparison operators (\verb|==|, \verb|!=|, \verb|<|, \verb|>|, \verb|<=|, and \verb|>=|) in C-like languages when they are applied to Boolean operands. Summarize the output of each in a truth table. Try to come up with equivalent logical expressions using only \textsc{and}, \textsc{or}, and \textsc{not}.
+
+\item Consider the following sequence of operations on two integer variables, \verb|x| and \verb|y| (again, this should work the same in all C-like languages, including Scala as long as \verb|x| and \verb|y| are declared as vars instead of vals):
+\begin{Verbatim}
+x = x \Caret y;
+y = y \Caret x;
+x = x \Caret y;
+\end{Verbatim}
+What is the net effect of this sequence on the values stored in \verb|x| and \verb|y|?
+
+\item Bitwise operations are also useful when working with character data. In the ASCII character encoding (which is also the first 128 characters of Unicode), the digits \verb|0| through \verb|9| have codes \verb|48| through \verb|57|; the uppercase latin alphabet, \verb|A| through \verb|Z|, has \verb|65| through \verb|90|, and the corresponding lowercase letters have codes \verb|97| through \verb|122|.
+\begin{enumerate}
+\item Convert the endpoints of each of these code ranges to binary.
+\item Give an expression using only integer constants and bitwise operations that will convert the character code \verb|c| for an ASCII digit into its corresponding integer value. Do not worry about what it will do to non-digits.
+\item Give a similar expression that will convert an integer \verb|n| in the range 0 to 9 into the corresponding ASCII digit code. Do not worry about error cases.
+\item Give expressions that will take a letter whose ASCII code is \verb|c| and \textit{(i)} convert it to uppercase, \textit{(ii)} convert it to lowercase, and \textit{(iii)} toggle it between upper- and lowercase. Do not worry about error cases.
+\end{enumerate}
+\end{exercises}
+
+\subsection{Logical Identities}
+\firstthought{The Boolean operations} satisfy a number of identities, many of which will be familiar from arithmetic:
+\[ \begin{array}{lll}
+\1p = p & \0+p = p & \textit{(Identity)}\\[1mm]
+\0p = \0 & \1+p = \1 & \textit{(Dominance)}\\[1mm]
+pq = qp & p+q = q+p & \textit{(Commutative)}\\[1mm]
+(pq)r = p(qr) & (p+q)+r = p+(q+r) & \textit{(Associative)}\\[1mm]
+p(q+r) = pq+pr & p+qr = (p+q)(p+r) & \textit{(Distributive)}\\[1mm]
+pp = p & p+p = p & \textit{(Idempotence)}\\[1mm]
+p(p+q) = p & p+pq = p & \textit{(Absorption)}\\[1mm]
+\overline{pq} = \overline{p}+\overline{q} & \overline{p+q} = \overline{p}\cdot\overline{q} & \textit{(De Morgan)}\\[1mm]
+p\overline{p} = \0 & p+\overline{p} = \1 & \textit{(Inverse)}\\[1mm]
+\overline{\overline{p}} = p & & \textit{(Double Negation)}
+\end{array} \]
+Note that all of them (except Double Negation) come in dual pairs: to get the second column, take the first column and replace every \textsc{and} with \textsc{or} and every \0 with \1, and \textit{vice versa}. This is known as the principle of ``duality''---the dual of any logical equation will also be a correct equation.
+
+Using these properties, we may follow the ordinary algebraic reasoning process of ``substituting equals for equals,'' to manipulate a logical expression into an equivalent form. The properties are not independent of each other; for example, here is a demonstration of the absorption law for \textsc{and}, using only the absorption for \textsc{or} and a few other identities:
+\[ \begin{array}{rcll}
+p(p+q) & = & pp+pq & \textit{Distributive for \textsc{and};}\\
+       & = & p+pq & \textit{Idempotence for \textsc{and};}\\
+       & = & p & \textit{Absorption for \textsc{or}.}
+\end{array} \]
+Some texts give additional laws, such as the ``simplification'' property that $p+\overline{p}q=p+q$. This may be established using the above identities by a similar reasoning process:
+\[ \begin{array}{rcll}
+p+\overline{p}q & = & (p+\overline{p})(p+q) & \textit{Distributive for \textsc{or};}\\
+                & = & \1(p+q) & \textit{Inverse for \textsc{or};}\\
+                & = & p+q & \textit{Identity for \textsc{and}.}
+\end{array} \]
+
+Another way to prove that two logical expressions are equivalent is by constructing a truth table relating the output value to the values of the input variables. If two expressions have the same output for each combination of true and false input values, then the expressions are equivalent. This exhaustive case analysis may be used to prove each of the identities above. For example, here are the two sides of the distributive property for \textsc{or}, $p+qr = (p+q)(p+r)$:
+\[ \begin{array}{ccc|cc}
+p  & q  & r  & qr & p+qr\\ \hline
+\0 & \0 & \0 & \0 & \0\\
+\0 & \0 & \1 & \0 & \0\\
+\0 & \1 & \0 & \0 & \0\\
+\0 & \1 & \1 & \1 & \1\\
+\1 & \0 & \0 & \0 & \1\\
+\1 & \0 & \1 & \0 & \1\\
+\1 & \1 & \0 & \0 & \1\\
+\1 & \1 & \1 & \1 & \1
+\end{array}\qquad
+\begin{array}{ccc|ccc}
+p  & q  & r  & p+q & p+r & (p+q)(p+r)\\ \hline
+\0 & \0 & \0 & \0  & \0  & \0\\
+\0 & \0 & \1 & \0  & \1  & \0\\
+\0 & \1 & \0 & \1  & \0  & \0\\
+\0 & \1 & \1 & \1  & \1  & \1\\
+\1 & \0 & \0 & \1  & \1  & \1\\
+\1 & \0 & \1 & \1  & \1  & \1\\
+\1 & \1 & \0 & \1  & \1  & \1\\
+\1 & \1 & \1 & \1  & \1  & \1
+\end{array} \]
+Since the result column in each table is the same, the identity holds.
+
+Note that if there are $k$ input variables, the truth table will need $2^k$ rows. An easy way to be sure to cover all of the combinations systematically is to generate all of the rows where the leftmost variable is \0, followed by a matching set of rows where the leftmost variable is \1; in each group, split it into \0/\1 halves based on the next-to-leftmost variable, \textit{etc.} If you are familiar with counting in binary, the result will be that the input columns count up from $0$ to $2^k-1$. Another way to think of this is with nested loops:
+\begin{verbatim}
+for (p <- 0 to 1) {
+  for (q <- 0 to 1) {
+    for (r <- 0 to 1) {
+      // generate row for p, q, r...
+    }
+  }
+}
+\end{verbatim}
+As the number of variables increases, the time required for this procedure will grow exponentially, so this is impractical for large problems. It is still an area of active research to find effective algorithms for working with large numbers of variables in logical expressions, although there are many advanced approaches that perform better in typical cases than constructing truth tables.
+
+\begin{tailquote}
+Augustus De Morgan (1806--1871) formulated the relation between \textsc{and}, \textsc{or}, and \textsc{not} that now bears his name. He also named and formalized the concept of mathematical induction, and he wrote the following poem about recursion:
+\begin{verse}
+Great fleas have little fleas upon their backs to bite 'em,\\
+And little fleas have lesser fleas, and so ad infinitum.\\
+And the great fleas themselves, in turn, have greater fleas to go on;\\
+While these again have greater still, and greater still, and so on.
+\end{verse}
+\end{tailquote}
+
+\begin{exercises}
+\item Another ``simplification'' law is $p(\overline{p}+q) = pq$. Check that this is valid by constructing a truth table, and then prove it by giving a chain of equational reasoning.
+\item Write a function in Scala that prints the input columns of a truth table. The argument should be an integer, \verb|k|, telling how many input variables there are. For example, \verb|printTableInput(3)| should produce the output
+\begin{verbatim}
+ 0 0 0
+ 0 0 1
+ 0 1 0
+ 0 1 1
+ 1 0 0
+ 1 0 1
+ 1 1 0
+ 1 1 1
+\end{verbatim}
+\textit{(Hint: start by defining an auxiliary function that takes an integer,} \verb|i|\textit{, that tells how many columns still need to be produced to the right, plus a string giving the prefix to be used for each of the lines in this group. For example, the call} \verb|aux(1, " 0 0")| \textit{should produce the first two lines of the output above.)}
+\end{exercises}
+
+\subsection{Disjunctive Normal Form}\label{ssec:DNF}
+\firstthought{One application of the identities} of the previous section is to convert a logical expression into an equivalent ``normal form''---an expression where the operations may be applied in only certain combinations, so that properties such as equivalence are easier to check. There are several normal forms in common use for logical expressions; we will look at two, the Negation Normal Form (NNF) and its stricter relative the Disjunctive Normal Form (DNF).
+
+The restriction in NNF is that negation is only applied to propositional variables. For example, $p(\overline{p}+\overline{q})$ and $p\overline{q}$ are both in NNF, while $p(\overline{pq})$ and $\overline{\overline{p}+q}$ are not (in the first case, negation is applied to a conjunction (\textsc{and}), while in the second case it is applied to a disjunction (\textsc{or})). The De Morgan laws are the main tool to convert an expression into NNF: whenever an expression contains a negation outside either an \textsc{and} or an \textsc{or}, the appropriate De Morgan law can be used to replace that sub-expression with one where the negations are inside. The double negation law can be used to eliminate negations of negations, and if there are any constants (\0 or \1), their negations may be evaluated directly.\footnote{The identity and dominance laws could also have been used to begin with, to eliminate any constants occurring in \textsc{and} or \textsc{or} expressions.} For example, starting with $\overline{\overline{p}+q}$, we may proceed as follows to find an equivalent expression in NNF:
+\[ \begin{array}{rcll}
+\overline{\overline{p}+q} & = & \overline{\overline{p}}\cdot\overline{q} & \textit{De Morgan for \textsc{or};}\\
+                          & = & p\overline{q} & \textit{Double Negation.}
+\end{array} \]
+A logical expression that is either a single propositional variable or the negation of a propositional variable is known as a ``literal.'' Thus, another way to describe NNF is that expressions are formed only from \textsc{and}, \textsc{or}, and literals. This can be represented by the following grammar rules:\footnote{Technically, these grammar rules only define the \textit{abstract} syntax of NNF expressions, since they omit the typical handling of parentheses or operator precedence needed to give an unambiguous \textit{concrete} syntax.}
+\[ \begin{array}{rrl}
+\textit{NNF} & ::= & \textit{NNF}\ \engAND\ \textit{NNF}\\
+             &   | & \textit{NNF}\ \engOR\ \textit{NNF}\\
+             &   | & \textit{Literal}\\
+\textit{Literal} & ::= & \engNOT\ \textit{ident}\\
+                 &   | & \textit{ident}
+\end{array} \]
+
+Our chief interest in NNF is as a stepping-stone to DNF. Disjunctive Normal Form adds the additional restriction that the operands of \textsc{and} operators may not contain the \textsc{or} operator. Another way to phrase this is that expressions in DNF must consist of one or more ``clauses'' joined with \textsc{or}; each clause is composed of one or more literals joined with \textsc{and}. As a grammar, this is:\footnote{Interestingly, this grammar is unambiguous, and provides a perfectly fine concrete syntax for DNF. A minor advantage of DNF is that, with the usual precedence of \textsc{and} before \textsc{or}, an expression in DNF will never need parentheses.}
+\[ \begin{array}{rrl}
+\textit{DNF} & ::= & \textit{DNF}\ \engOR\ \textit{Clause}\\
+             &   | & \textit{Clause}\\
+\textit{Clause} & ::= & \textit{Clause}\ \engAND\ \textit{Literal}\\
+             &   | & \textit{Literal}\\
+\textit{Literal} & ::= & \engNOT\ \textit{ident}\\
+                 &   | & \textit{ident}
+\end{array} \]
+Continuing with the examples from before, $p\overline{q}$ is in DNF---it consists of a single clause containing two literals. However, although $p(\overline{p}+\overline{q})$ is in NNF, it is not in DNF, because it is a conjunction of $p$ with a disjunction (the expression in parentheses).
+
+To convert an expression into an equivalent one in DNF, first convert it to NNF, then use the distributive law for \textsc{and} to ``push'' each conjunction involving an \textsc{or} down to the clause level. For example, we may put $p(\overline{p}+\overline{q})$ into DNF as follows:
+\[ \begin{array}{rcll}
+p(\overline{p}+\overline{q}) & = & p\overline{p}+p\overline{q} & \textit{Distributive for \textsc{and}.}
+\end{array} \]
+
+Once an expression is in DNF, we may often perform additional simplifications to the clauses. If a clause contains the same literal twice, such as $p\overline{q}p$ or $\overline{q}\cdot\overline{q}r$, then we may remove the duplicate using idempotence; these two clauses are equivalent to $p\overline{q}$ and $\overline{q}r$. If a clause contains both a literal and its negation, then the inverse law says that they cancel each other out and produce false (\0). A clause containing \0 is always false (by dominance); since \0 is the identity for \textsc{or}, any false clauses may simply be dropped (except in the limiting case that it is the only remaining clause). Thus, the example above may be continued:
+\[ \begin{array}{rcll}
+p(\overline{p}+\overline{q}) & = & p\overline{p}+p\overline{q} & \textit{Distributive for \textsc{and};}\\
+                             & = & p\overline{q} & \textit{Inverse, Dominance, and Identity.}
+\end{array} \]
+
+Having removed any duplicate literals, it is common to write each clause in a DNF expression with the literals in alphabetic order. A final variation known as ``Full Disjunctive Normal Form'' (full DNF) requires that all clauses contain exactly the same list of propositional variables. This may be achieved by applying the inverse law for \textsc{or} to introduce any missing variable in the form $x+\overline{x}$; since this expression is always true, combining it into a clause will not change the clause's truth value. After introducing these expressions, distributivity must be applied again to restore DNF. Here is an example of introducing the variable $r$ into the clause $p\overline{q}$:
+\[ \begin{array}{rcll}
+p\overline{q} & = & p\overline{q}(r+\overline{r}) & \textit{Identity and Inverse;}\\
+              & = & p\overline{q}r + p\overline{q}\cdot\overline{r} & \textit{Distributive for \textsc{and}.}
+\end{array} \]
+
+The crucial fact about full DNF is that it is closely related to the truth table for the expression. Each clause corresponds to one set of inputs that make the expression true (that is, one of the rows where the output is \1). Since each clause contains all of the propositional variables, either negated or not, it specifies the combination of \0 and \1 inputs for that row. For example, consider the following three-input truth table, where the output $x$ is true if an even number of the inputs are true:
+\[ \begin{array}{ccc|c}
+p & q & r & x\\ \hline
+\0 & \0 & \0 & \1\\
+\0 & \0 & \1 & \0\\
+\0 & \1 & \0 & \0\\
+\0 & \1 & \1 & \1\\
+\1 & \0 & \0 & \0\\
+\1 & \0 & \1 & \1\\
+\1 & \1 & \0 & \1\\
+\1 & \1 & \1 & \0
+\end{array} \]
+The output is true for inputs \0\0\0, \0\1\1, \1\0\1, and \1\1\0. These correspond to the clauses $\overline{p}\cdot\overline{q}\cdot\overline{r}$, $\overline{p}qr$, $p\overline{q}r$, and $pq\overline{r}$. Therefore, a full DNF expression equivalent to $x$ is
+\[
+\overline{p}\cdot\overline{q}\cdot\overline{r} + \overline{p}qr + p\overline{q}r + pq\overline{r}
+\]
+Inspecting this expression confirms that it is true when either none of the inputs are true, or when exactly two of the inputs are true and the third is false. Since truth tables match full DNF expressions, and every logical expression is equivalent to one in full DNF, we may use either form to reason about the behavior of any combination of \textsc{and}, \textsc{or}, and \textsc{not} operators.
+
+\begin{tailquote}
+Normal: An adjective used by boring people to make themselves feel better.\\
+\hfill---The Urban Dictionary
+\end{tailquote}
+
+\begin{exercises}
+\item Convert each of the following expressions into full DNF, and use that to construct a truth table for the expression:
+\begin{enumerate}
+\item $(p+q)\overline{pq}$
+\item $(\overline{p}+q)(p+\overline{q})$
+\item $(p\oplus q)\oplus r$, where $p\oplus q$ is the exclusive-\textsc{or} of $p$ and $q$ \textit{(Hint: use part (a))}
+\item $(p+q+r)(p+q+\overline{r})(\overline{p}+q)$
+\item $(\overline{p}+q)(\overline{q}+r)\overline{(p+\overline{r})}$
+\end{enumerate}
+
+\item\label{ex:CNF} The ``dual'' of Disjunctive Normal Form is Conjunctive Normal Form (CNF), where instead of a sum of products, each expression is a product of sums of literals (items (b) and (d) of the previous question are examples). Follow the development of this section to define a notion of \textit{full} CNF and a method to convert an arbitrary expression into full CNF. Use this to convert each of the items of the previous exercise to full CNF, then try to identify a connection between full CNF and truth tables.
+\end{exercises}
+
+\subsection{Other Boolean Operators}\label{ssec:OtherBooleanOps}
+\firstthought{So far we have concentrated} on just three operators: \textsc{and}, \textsc{or}, and \textsc{not}. We have also looked briefly at exclusive-\textsc{or}, and Exercise~\ref{basicop}.\ref{ex:cmpop} asked you to consider the integer comparison operators as Boolean operations, but how many more operators could there be? If we identify an operator with its truth table, this is easy to answer: with two inputs, a truth table will have four rows; since each row may have output either \0 or \1, there are $2^4=16$ possible truth tables. Here is a summary, with common operators filled in where available:\sidenote[][-1cm]{The three missing operators have reasonable symbols: $p>q$, $p<q$, and $p\leftarrow q$, but these are not in common use.}
+\begin{fullwidth}
+\[ \begin{array}{cc|cccccccccccccccc}
+p & q & \0 & p\land q & & p & & q & p\oplus q & p\lor q & p\downarrow q & p\leftrightarrow q &
+\lnot q & & \lnot p & p\rightarrow q & p\uparrow q & \1\\ \hline
+\0 & \0 & \0 & \0 & \0 & \0 & \0 & \0 & \0 & \0 & \1 & \1 & \1 & \1 & \1 & \1 & \1 & \1\\
+\0 & \1 & \0 & \0 & \0 & \0 & \1 & \1 & \1 & \1 & \0 & \0 & \0 & \0 & \1 & \1 & \1 & \1\\
+\1 & \0 & \0 & \0 & \1 & \1 & \0 & \0 & \1 & \1 & \0 & \0 & \1 & \1 & \0 & \0 & \1 & \1\\
+\1 & \1 & \0 & \1 & \0 & \1 & \0 & \1 & \0 & \1 & \0 & \1 & \0 & \1 & \0 & \1 & \0 & \1
+\end{array} \]
+\end{fullwidth}
+
+The only operators in this table that have not been mentioned before are the arrows. The ``implication,'' $p\rightarrow q$, is often read ``if $p$ then $q$.'' It adopts the common logical convention that when $p$ is false the implication is true, regardless of $q$. One way to think of this is as a condition in a contract (or a precondition for a piece of code): when the ``antecedent'' $p$ is true, then the ``consequent'' $q$ must also be true to satisfy the contract; but when $p$ is false, then all bets are off---there is no expectation for whether $q$ is true or not.
+
+The ``bi-implication,'' or equivalence operator, $p\leftrightarrow q$, is the combination of $p\rightarrow q$ and $q\rightarrow p$. It is often read ``$p$ if and only if $q$,'' or ``$p$ iff $q$.'' It is true whenever $p$ and $q$ have the same truth value.
+
+The downward arrow, $p\downarrow q$, is known as the Peirce Arrow (Wikipedia helpfully points out that this is not to be confused with the Pierce-Arrow automobile; Google, as I was writing this, repeatedly insisted on correcting Peirce to Pierce\ldots). It is only true when neither $p$ nor $q$ is true, so it is more commonly known as the \textsc{nor} operator. A mnemonic for remembering the symbol is that it looks like an \textsc{or} operator ($\lor$) with a vertical slash negating it.
+
+The upward arrow, $p\uparrow q$, is the dual, known as the Sheffer Stroke or the \textsc{nand} operator. Just as \textsc{nor} is the negation of \textsc{or}, this is the negation of \textsc{and}: $p\uparrow q$ is true unless both $p$ and $q$ are true.
+
+While each of these additional operators has its uses, it is comforting to know that we are not missing anything by sticking with our three basic gates, \textsc{and}, \textsc{or}, and \textsc{not}. By the observation at the end of the previous section, any Boolean operator defined by a truth table is equivalent to an expression in Disjunctive Normal Form. This applies as well for operators with more than two inputs, which is a relief because with just three inputs there are already $2^{2^3}=256$ possible truth tables, and it would have been difficult to come up with names and symbols for all of those operators\ldots.
+
+For example, we may read off from the truth table for $p\rightarrow q$ that an equivalent expression is $\overline{p}\cdot\overline{q}+\overline{p}q+pq$. The full DNF expression is not usually the simplest, however (see the next section for a more systematic approach to simplification). In this case, we may use the following chain of identities to find a simpler version:
+\[ \begin{array}{rcll}
+\overline{p}\cdot\overline{q}+\overline{p}q+pq & = & \overline{p}(\overline{q}+q)+pq & \textit{Distributive for \textsc{and};}\\
+& = & \overline{p}\1+pq & \textit{Inverse for \textsc{or};}\\
+& = & \overline{p}+pq & \textit{Identity for \textsc{and};}\\
+& = & (\overline{p}+p)(\overline{p}+q) & \textit{Distributive for \textsc{or};}\\
+& = & \1(\overline{p}+q) & \textit{Inverse for \textsc{or};}\\
+& = & \overline{p}+q & \textit{Identity for \textsc{and}.}
+\end{array} \]
+Therefore, whenever we need the implication $p\rightarrow q$, we may instead use the expression $\overline{p}+q$. Note that this confirms the earlier observation that the implication is true whenever either the antecedent ($p$) is false or the consequent ($q$) is true.
+
+Careful examination of the Boolean identities reveals that we can actually make do with fewer than three basic operators. The De Morgan laws show how to define \textsc{and} in terms of \textsc{or} and \textsc{not}: $pq=\overline{\overline{p}+\overline{q}}$. Dually, we could use $p+q=\overline{\overline{p}\cdot\overline{q}}$ to eliminate the \textsc{or} operator in favor of just \textsc{and} and \textsc{not}. However, it is not possible to reduce this particular set of operators further: \textsc{not} alone is clearly insufficient, and it is impossible to get negation using either of the other two, or even both (a simple argument is to observe that for both $pq$ and $p+q$, increasing an input from \0 to \1 can never cause the output to decrease from \1 to \0---expressions using only \textsc{and} and \textsc{or} always have this ``monotonicity'' property, so they can never implement negation).
+
+Nevertheless, there are other operators that have the ``functional completeness'' property whereby all other operations may be expressed. Indeed, this is the original source of Peirce and Sheffer's interest in \textsc{nor} and \textsc{nand}---each one by itself is functionally complete. Here are appropriate expressions in terms of \textsc{nor}:
+\[ \begin{array}{rcl}
+\lnot p & = & p\downarrow p\\
+p\land q & = & (p\downarrow p)\downarrow(q\downarrow q)\qquad[=(\lnot p)\downarrow(\lnot q)]\\
+p\lor q & = & (p\downarrow q)\downarrow(p\downarrow q)\qquad[=\lnot (p\downarrow q)]
+\end{array} \]
+The expressions for \textsc{nand} are dual, again using $\lnot p=p\uparrow p$.
+
+Functional completeness is not merely an academic curiosity. The \textsc{nand} and \textsc{nor} gates are particularly simple to implement in silicon (each needs essentially one transistor per input), and building an entire circuit out of identical building blocks makes both design and fabrication easier. Indeed, the very first computer built from integrated circuits was the Apollo Guidance Computer, which used about 5600 three-input \textsc{nor} gates to help Apollo 11 land on the moon.
+
+\begin{tailquote}
+Charles Sanders Peirce [pronounced ``Purse''] (1839--1914) was an American scientist and philosopher who wrote many influential papers, and many more that would have been influential if they had been published during his lifetime. In addition to the functional completeness result mentioned above, he helped develop and promote modern logical notation and the use of truth tables, and he worked out the foundations of what became relational database theory a century later. Arthur Burks, a 1936 DePauw graduate who went on to help build ENIAC, credited Peirce with having the idea of building an electrical computing machine, based on wiring up switches to perform logical operations, fifty years before such a machine was built!
+\end{tailquote}
+
+\begin{exercises}
+\item Confirm the following equivalences, using either truth tables or logical identities:
+\begin{enumerate}
+\item $p\leftrightarrow q = (p\rightarrow q)(q\rightarrow p)$
+\item $\overline{p\leftrightarrow q\vphantom{X}} = p\oplus q$
+\end{enumerate}
+
+\item Give expressions equivalent to $p\rightarrow q$, $p\leftrightarrow q$, $p\oplus q$, and $p\downarrow q$ using only the \textsc{nand} operator ($\uparrow$).
+
+\item Show that the implication operator ($\rightarrow$) is also functionally complete, provided the constant \0 is also available (this is not unreasonable in an electronic circuit, where \0 is the ground voltage). That is, show how to define $pq$, $p+q$, and $\overline{p}$ using only $\rightarrow$ and \0 in addition to the input variables $p$ and $q$.
+\end{exercises}

@@ -1,0 +1,31 @@
+% !TEX root = ../root.tex
+
+\chapter{Introduction}
+\firstthought{Computation is an inherently mathematical activity.} This is not to say that computation is all about adding and multiplying numbers, any more than mathematics is all about arithmetic. Indeed, just as practicing mathematicians can spend an entire career without needing to perform long division or solve a quadratic equation, many computer scientists and software developers will rarely perform tasks that resemble the math taught in school.
+
+In 1995, the text \textit{Foundations of Computer Science}, by Alfred V. Aho\index{Aho, Alfred V.} and Jeffrey D. Ullman\index{Ullman, Jeffrey D.}\cite{aho1994foundations}, provided an excellent introduction to a broad range of topics at the mathematical core of computer science. However, in the intervening two decades, much has changed in the field, from the shifting fashions of popular programming languages to the rise of the World Wide Web. Although the core topics remain largely unchanged, the motivating examples and the means by which they are presented need to be revised to accommodate the new generation of students and current challenges in the computing profession.
+
+The goal of this text is to adapt the classic Aho \& Ullman work to provide a better fit to the current curriculum of several of DePauw's Computer Science courses. In addition to CSC 233, Foundations of Computation, which has used sections of Aho \& Ullman for the past several years, portions of the book are also relevant to the companion sophomore-level courses (CSC 231, Computer Systems and CSC 232, Object-Oriented Software Development), as well as several of the upper-level courses.
+
+One significant advantage of ensuring that students come into the upper-level courses with a more substantial mathematical background is that many of the common tools of computer science may be moved into the common core instead of being introduced and re-introduced in multiple later courses. Examples of these common tools include the interconnected notions of
+\begin{itemize}
+\item tree-like hierarchical data,
+\item systems of grammar rules,
+\item patterns of function evaluation, and
+\item simple digital logic circuits,
+\end{itemize}
+or their corresponding generalizations to
+\begin{itemize}
+\item web-like networked data,
+\item systems of states and transition rules,
+\item patterns of recursive functions, and
+\item logic circuits with feedback and memory.
+\end{itemize}
+
+The disadvantage of the Aho \& Ullman text is that, although the core material will continue to be relevant for many years, the presentation has become dated in several ways. First, though not most important, is the programming language used for the book's examples. The original edition, in 1992, used Pascal, which by that time was already waning in popularity for teaching. The 1994 edition updated the examples to C, which has shown considerably more staying power, either in its plain form or in the updated C++. However, that edition just missed the boat on the most popular programming language of the past 20 years, Java, which was introduced to the public the following year.
+
+That year also saw an explosion of interest in the World Wide Web, fueled in part by Java's ability to add interactivity to webpages that initially had only contained static text and images. This was the start of the more serious relevance problems for \textit{Foundations of Computer Science}: it has no mention of the single most influential application of networked data, the web. Other foundational computer science topics that have since risen in importance, but which are at most only hinted at by Aho \& Ullman, include: parallel computing (which has become essential in recent years with the spread of multicore processors), distributed computing (such as the massive server farms at Google, or the notion of ``computing in the cloud''), security (encryption techniques rely heavily on mathematics), and additional programming paradigms such as object-oriented, logic, and functional programming.
+
+This last point, the use of functional programming, is particularly important to our presentation of CSC 233. The functional style\index{functional style} has close ties with the mathematical roots of our subject, and fits well with topics such as handling hierarchical data and working with recursion. The absence of functional programming from Aho \& Ullman is certainly the most glaring mismatch between the text and the course.
+
+Finally, one of the other core topics that migrated into DePauw's Foundations course is digital logic. This used to be a part of Computer Systems, but it is currently included in Foundations because it fits well with the other topics, and it makes room in Systems for additional higher-level material. Aho \& Ullman have a chapter on digital logic, but it is not as comprehensive; uncharacteristically, they only hint at the generalization from straight-line, tree-like combinational circuits to sequential circuits with feedback loops. This is particularly unfortunate, because this topic makes a good course wrap-up, tying together several previous threads (namely, it applies the graph data model and finite state transition diagrams to turn the pure functional logic circuits into machines with memory).
